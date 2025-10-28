@@ -47,15 +47,26 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        panel: {
+          dark: "hsl(var(--panel-dark))",
+          medium: "hsl(var(--panel-medium))",
+          light: "hsl(var(--panel-light))",
+        },
+        timeline: {
+          bg: "hsl(var(--timeline-bg))",
+          track: "hsl(var(--timeline-track))",
+          grid: "hsl(var(--timeline-grid))",
+          playhead: "hsl(var(--timeline-playhead))",
+        },
+        clip: {
+          video: "hsl(var(--clip-video))",
+          audio: "hsl(var(--clip-audio))",
+          image: "hsl(var(--clip-image))",
+          text: "hsl(var(--clip-text))",
+        },
+        monitor: {
+          bg: "hsl(var(--monitor-bg))",
+          controls: "hsl(var(--monitor-controls))",
         },
       },
       borderRadius: {
