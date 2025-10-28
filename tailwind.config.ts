@@ -69,6 +69,12 @@ export default {
           controls: "hsl(var(--monitor-controls))",
         },
       },
+      backgroundImage: {
+        'gradient-primary': 'var(--gradient-primary)',
+      },
+      boxShadow: {
+        'glow-primary': 'var(--glow-primary)',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

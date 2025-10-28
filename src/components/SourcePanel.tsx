@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export const SourcePanel = () => {
   return (
-    <div className="h-full bg-panel-medium border-r border-border flex flex-col">
+    <div className="h-full bg-panel-medium border-r-2 border-r-primary/20 border-t border-border flex flex-col">
       {/* Header */}
       <div className="h-12 border-b border-border flex items-center justify-between px-4">
         <h2 className="text-sm font-semibold text-foreground">Source Monitor</h2>
@@ -14,7 +14,7 @@ export const SourcePanel = () => {
       </div>
 
       {/* Monitor Display */}
-      <div className="flex-1 bg-monitor-bg flex items-center justify-center p-4">
+      <div className="flex-1 bg-monitor-bg flex items-center justify-center p-2">
         <div className="relative w-full aspect-video bg-black rounded border border-border overflow-hidden">
           {/* Placeholder */}
           <div className="absolute inset-0 bg-gradient-to-br from-panel-dark via-panel-medium to-panel-dark flex items-center justify-center">
@@ -23,6 +23,9 @@ export const SourcePanel = () => {
               <p className="text-xs text-muted-foreground">Select a clip to preview</p>
             </div>
           </div>
+          
+          {/* Scrub Bar */}
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-panel-dark/80" />
         </div>
       </div>
 
@@ -36,7 +39,7 @@ export const SourcePanel = () => {
             --:--:--:--
           </div>
         </div>
-        <Button size="sm" className="bg-primary hover:bg-primary/90 gap-2 h-8">
+        <Button size="sm" className="bg-gradient-primary hover:opacity-90 text-white gap-2 h-8 shadow-glow-primary">
           <ArrowRight className="w-4 h-4" />
           Insert to Timeline
         </Button>

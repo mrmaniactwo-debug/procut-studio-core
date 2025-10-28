@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const MediaBrowser = () => {
   return (
-    <div className="h-full bg-panel-medium border-r border-border flex flex-col">
+    <div className="h-full bg-panel-medium border-r-2 border-r-primary/20 flex flex-col">
       {/* Header */}
       <div className="h-12 border-b border-border flex items-center justify-between px-4">
         <h2 className="text-sm font-semibold text-foreground">Project Media</h2>
@@ -55,7 +55,7 @@ export const MediaBrowser = () => {
 
         <TabsContent value="media" className="flex-1 overflow-y-auto p-3 mt-0">
           {/* Import Area */}
-          <div className="border-2 border-dashed border-border rounded-lg p-6 text-center mb-4 hover:border-primary/50 transition-colors cursor-pointer">
+          <div className="border-2 border-dashed border-border rounded-lg p-5 text-center mb-4 hover:border-primary/50 hover:shadow-glow-primary transition-all cursor-pointer">
             <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-foreground mb-1">Import Media Files</p>
             <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
