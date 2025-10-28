@@ -1,7 +1,20 @@
 import { Play, Scissors, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { useState } from "react";
+
+interface Clip {
+  id: string;
+  name: string;
+  duration: string;
+  inPoint: number;
+  outPoint: number;
+}
+
 export const SourcePanel = () => {
+  const [currentClip, setCurrentClip] = useState<Clip | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   return (
     <div className="h-full bg-panel-medium border-r-2 border-r-primary/20 border-t border-border flex flex-col">
       {/* Header */}
@@ -31,18 +44,106 @@ export const SourcePanel = () => {
 
       {/* Controls */}
       <div className="h-16 border-t border-border bg-monitor-controls px-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Play className="w-4 h-4" />
-          </Button>
-          <div className="text-xs font-mono text-muted-foreground">
-            --:--:--:--
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-8 w-8 ${isPlaying ? 'text-primary' : ''}`}
+              onClick={() => setIsPlaying(!isPlaying)}
+            >
+              <Play className="w-4 h-4" />
+            </Button>
+            <div className="flex gap-2 items-center">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => {
+                  if (currentClip) {
+                    setCurrentTime(Math.max(0, currentTime - 1));
+                  }
+                }}
+              >
+                <ArrowRight className="w-3 h-3 rotate-180" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => {
+                  if (currentClip) {
+                    setCurrentTime(Math.min(parseFloat(currentClip.duration), currentTime + 1));
+                  }
+                }}
+              >
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="text-xs font-mono text-muted-foreground">
+              {currentClip ? 
+                `${Math.floor(currentTime / 60).toString().padStart(2, '0')}:${Math.floor(currentTime % 60).toString().padStart(2, '0')}` :
+                '--:--'
+              }
+            </div>
+            <span className="text-xs text-muted-foreground">/</span>
+            <div className="text-xs font-mono text-muted-foreground">
+              {currentClip ? currentClip.duration : '--:--'}
+            </div>
           </div>
         </div>
-        <Button size="sm" className="bg-gradient-primary hover:opacity-90 text-white gap-2 h-8 shadow-glow-primary">
-          <ArrowRight className="w-4 h-4" />
-          Insert to Timeline
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            className="h-8"
+            onClick={() => {
+              if (currentClip) {
+                setCurrentClip({
+                  ...currentClip,
+                  inPoint: currentTime,
+                });
+              }
+            }}
+          >
+            Set In
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            className="h-8"
+            onClick={() => {
+              if (currentClip) {
+                setCurrentClip({
+                  ...currentClip,
+                  outPoint: currentTime,
+                });
+              }
+            }}
+          >
+            Set Out
+          </Button>
+          <Button 
+            size="sm" 
+            className="bg-gradient-primary hover:opacity-90 text-white gap-2 h-8 shadow-glow-primary"
+            disabled={!currentClip}
+            onClick={() => {
+              if (currentClip) {
+                // TODO: Implement timeline insertion
+                console.log('Insert clip to timeline:', {
+                  ...currentClip,
+                  inPoint: currentClip.inPoint,
+                  outPoint: currentClip.outPoint
+                });
+              }
+            }}
+          >
+            <ArrowRight className="w-4 h-4" />
+            Insert
+          </Button>
+        </div>
       </div>
     </div>
   );
