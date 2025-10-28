@@ -86,10 +86,13 @@ All colors MUST be HSL.
 
 @layer base {
   * {
-    @apply border-border;
+    /* Replace Tailwind `@apply border-border` with explicit CSS so editor/linter won't flag unknown at-rules */
+    border-color: hsl(var(--border));
   }
 
   body {
-    @apply bg-background text-foreground;
+    /* Replace Tailwind `@apply bg-background text-foreground` with explicit CSS */
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
