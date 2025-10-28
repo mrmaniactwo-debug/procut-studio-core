@@ -1,4 +1,4 @@
-import { Play, Pause, Volume2, Maximize, Settings } from "lucide-react";
+import { Play, Pause, Volume2, Maximize, Settings, Camera, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 
@@ -45,47 +45,69 @@ export const PreviewMonitor = () => {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="h-16 border-t border-border bg-monitor-controls px-4 flex items-center justify-between gap-4">
+      {/* Controls - Enhanced */}
+      <div className="h-20 border-t border-border bg-monitor-controls px-4 flex flex-col gap-2 py-2">
         {/* Playback Controls */}
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z"/>
-              <path d="M0 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z"/>
-            </svg>
-          </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 bg-gradient-primary hover:opacity-90 shadow-glow-primary">
-            <Play className="w-5 h-5 text-white" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z"/>
-              <path d="M9 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1z"/>
-            </svg>
-          </Button>
-          <div className="ml-2 text-xs font-mono text-muted-foreground">
-            00:00:00:00 / 00:00:30:00
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z"/>
+                <path d="M0 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z"/>
+              </svg>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 bg-gradient-primary hover:opacity-90 shadow-glow-primary">
+              <Play className="w-5 h-5 text-white" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z"/>
+                <path d="M9 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1z"/>
+              </svg>
+            </Button>
+            
+            <div className="w-px h-6 bg-border mx-1" />
+            
+            {/* Mark In/Out and additional controls */}
+            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary">
+              Mark In
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary">
+              Mark Out
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary">
+              <Camera className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary">
+              <Repeat className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+
+          {/* Volume & Settings */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4 text-muted-foreground" />
+              <Slider 
+                defaultValue={[70]} 
+                max={100} 
+                step={1}
+                className="w-20"
+              />
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+              <Maximize className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+              <Settings className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-
-        {/* Volume & Settings */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Volume2 className="w-4 h-4 text-muted-foreground" />
-            <Slider 
-              defaultValue={[70]} 
-              max={100} 
-              step={1}
-              className="w-20"
-            />
+        
+        {/* Timecode Display */}
+        <div className="flex items-center justify-center">
+          <div className="text-sm font-mono text-foreground bg-panel-dark px-3 py-1 rounded border border-border">
+            00:00:00:00 / 00:00:30:00
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Maximize className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings className="w-4 h-4" />
-          </Button>
         </div>
       </div>
     </div>

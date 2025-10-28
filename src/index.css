@@ -25,6 +25,10 @@ All colors MUST be HSL.
     --accent-blue-hover: 199 100% 45%;
     --accent-blue-glow: 199 100% 50%;
     
+    /* Yellow timeline accent - Premiere style */
+    --timeline-yellow: 48 100% 50%;
+    --timeline-yellow-glow: 48 100% 60%;
+    
     /* UI Elements */
     --card: 220 12% 14%;
     --card-foreground: 220 10% 95%;
@@ -72,6 +76,11 @@ All colors MUST be HSL.
     /* Gradients for modern accents */
     --gradient-primary: linear-gradient(90deg, hsl(199 100% 50%), hsl(210 100% 50%));
     --glow-primary: 0 0 20px hsla(199, 100%, 50%, 0.4);
+    --glow-yellow: 0 0 15px hsla(48, 100%, 50%, 0.5);
+    
+    /* Shadows for depth */
+    --shadow-panel: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-panel-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
 }
 

@@ -54,7 +54,12 @@ export const Header = () => {
               <Upload className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Import Media</TooltipContent>
+          <TooltipContent>
+            <div className="flex items-center gap-2">
+              <span>Import Media</span>
+              <kbd className="px-1.5 py-0.5 text-xs bg-panel-dark rounded border border-border">⌘I</kbd>
+            </div>
+          </TooltipContent>
         </Tooltip>
         
         <Tooltip>
@@ -63,7 +68,12 @@ export const Header = () => {
               <Undo2 className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Undo</TooltipContent>
+          <TooltipContent>
+            <div className="flex items-center gap-2">
+              <span>Undo</span>
+              <kbd className="px-1.5 py-0.5 text-xs bg-panel-dark rounded border border-border">⌘Z</kbd>
+            </div>
+          </TooltipContent>
         </Tooltip>
         
         <Tooltip>
@@ -72,7 +82,12 @@ export const Header = () => {
               <Redo2 className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Redo</TooltipContent>
+          <TooltipContent>
+            <div className="flex items-center gap-2">
+              <span>Redo</span>
+              <kbd className="px-1.5 py-0.5 text-xs bg-panel-dark rounded border border-border">⌘⇧Z</kbd>
+            </div>
+          </TooltipContent>
         </Tooltip>
         
         <Tooltip>
@@ -81,7 +96,12 @@ export const Header = () => {
               <Save className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Save Project</TooltipContent>
+          <TooltipContent>
+            <div className="flex items-center gap-2">
+              <span>Save Project</span>
+              <kbd className="px-1.5 py-0.5 text-xs bg-panel-dark rounded border border-border">⌘S</kbd>
+            </div>
+          </TooltipContent>
         </Tooltip>
         
         <Tooltip>
@@ -90,21 +110,23 @@ export const Header = () => {
               <Scissors className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Cut Tool</TooltipContent>
+          <TooltipContent>
+            <div className="flex items-center gap-2">
+              <span>Cut Tool</span>
+              <kbd className="px-1.5 py-0.5 text-xs bg-panel-dark rounded border border-border">C</kbd>
+            </div>
+          </TooltipContent>
         </Tooltip>
         
         <div className="w-px h-6 bg-border mx-2" />
         
-        {/* Mode Switcher */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground hover:text-foreground">
-              Editing
-              <ChevronDown className="w-3 h-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Switch Mode</TooltipContent>
-        </Tooltip>
+        {/* Workspace Switcher */}
+        <select className="text-xs bg-panel-light border border-border rounded px-3 py-1.5 text-foreground hover:border-primary transition-colors cursor-pointer">
+          <option>Editing</option>
+          <option>Color</option>
+          <option>Audio</option>
+          <option>Export</option>
+        </select>
         
         <div className="w-px h-6 bg-border mx-2" />
         

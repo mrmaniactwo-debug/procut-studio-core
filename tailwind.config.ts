@@ -57,6 +57,8 @@ export default {
           track: "hsl(var(--timeline-track))",
           grid: "hsl(var(--timeline-grid))",
           playhead: "hsl(var(--timeline-playhead))",
+          yellow: "hsl(var(--timeline-yellow))",
+          yellowGlow: "hsl(var(--timeline-yellow-glow))",
         },
         clip: {
           video: "hsl(var(--clip-video))",
@@ -74,6 +76,9 @@ export default {
       },
       boxShadow: {
         'glow-primary': 'var(--glow-primary)',
+        'glow-yellow': 'var(--glow-yellow)',
+        'panel': 'var(--shadow-panel)',
+        'panel-hover': 'var(--shadow-panel-hover)',
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,10 +1,32 @@
-import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { useState } from "react";
 
 export const Timeline = () => {
+  const [trackStates, setTrackStates] = useState({
+    v1: { visible: true, locked: false, muted: false },
+    a1: { visible: true, locked: false, muted: false },
+    v2: { visible: true, locked: false, muted: false },
+    a2: { visible: true, locked: false, muted: false },
+  });
+
   return (
-    <div className="h-80 bg-timeline-bg border-t border-primary/20 flex flex-col">
+    <div className="h-80 bg-timeline-bg border-t border-primary/20 flex">
+      {/* Audio Level Meter - Right Side */}
+      <div className="w-12 bg-panel-dark border-l border-border flex flex-col items-center py-2">
+        <div className="text-[10px] text-muted-foreground mb-2 rotate-0 writing-mode-vertical">AUDIO</div>
+        <div className="flex-1 flex gap-1 justify-center">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="w-2 bg-panel-medium rounded-full relative overflow-hidden">
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-timeline-yellow to-red-500" style={{ height: `${40 + Math.random() * 30}%` }} />
+            </div>
+          ))}
+        </div>
+        <div className="text-[9px] text-muted-foreground mt-1">-12 dB</div>
+      </div>
+      
+      <div className="flex-1 flex flex-col">
       {/* Timeline Controls */}
       <div className="h-12 bg-panel-medium border-b border-border flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
@@ -34,78 +56,110 @@ export const Timeline = () => {
         </div>
       </div>
 
-      {/* Timeline Ruler */}
-      <div className="h-8 bg-panel-dark border-b border-border relative">
-        <div className="absolute inset-0 flex items-center px-16">
+      {/* Timeline Ruler - Yellow accented */}
+      <div className="h-8 bg-panel-dark border-b border-timeline-yellow/20 relative">
+        <div className="absolute inset-0 flex items-center px-20">
           {[0, 5, 10, 15, 20, 25, 30].map((time) => (
             <div key={time} className="flex-1 relative">
-              <div className="absolute left-0 top-1/2 w-px h-3 bg-timeline-grid/50" />
-              <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">
+              <div className="absolute left-0 top-0 w-px h-full bg-timeline-yellow/30" />
+              <span className="absolute left-1 top-1 text-[10px] text-timeline-yellow font-mono font-semibold">
                 {time}s
               </span>
               {/* Tick marks */}
               {time < 30 && (
-                <div className="absolute left-1/2 top-1/2 w-px h-1.5 bg-timeline-grid/30" />
+                <>
+                  <div className="absolute left-1/4 top-0 w-px h-2 bg-timeline-yellow/20" />
+                  <div className="absolute left-1/2 top-0 w-px h-3 bg-timeline-yellow/25" />
+                  <div className="absolute left-3/4 top-0 w-px h-2 bg-timeline-yellow/20" />
+                </>
               )}
             </div>
           ))}
-          {/* Markers */}
-          <div className="absolute left-32 -top-1 w-2 h-2 bg-accent rounded-full border border-background" />
-          <div className="absolute left-64 -top-1 w-2 h-2 bg-accent rounded-full border border-background" />
+          {/* Markers - colored */}
+          <div className="absolute left-32 top-0 w-2 h-2 bg-green-500 rounded-sm shadow-sm" />
+          <div className="absolute left-64 top-0 w-2 h-2 bg-blue-500 rounded-sm shadow-sm" />
         </div>
-        {/* Playhead - thinner, more distinct */}
-        <div className="absolute left-20 top-0 bottom-0 w-px bg-timeline-playhead shadow-[0_0_12px_rgba(0,168,255,0.8)]">
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-timeline-playhead rounded-sm rotate-45 shadow-glow-primary" />
+        {/* Playhead - Yellow glowing */}
+        <div className="absolute left-20 top-0 bottom-0 w-0.5 bg-timeline-yellow shadow-glow-yellow">
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-timeline-yellow rounded-sm shadow-glow-yellow" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-timeline-yellow" />
         </div>
       </div>
 
       {/* Timeline Tracks */}
       <div className="flex-1 overflow-y-auto">
         {/* Video Track 1 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center gap-1">
-          {/* Track Controls */}
-          <div className="w-16 flex flex-col items-center justify-center gap-0.5 border-r border-border px-1">
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+          {/* Track Controls - Enhanced */}
+          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
             <div className="flex items-center gap-1 w-full justify-between">
-              <span className="text-xs text-muted-foreground font-medium">V1</span>
+              <span className="text-xs text-primary font-semibold">V1</span>
               <div className="flex gap-0.5">
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Eye className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v1.visible ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v1: { ...prev.v1, visible: !prev.v1.visible }}))}
+                >
+                  {trackStates.v1.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Lock className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v1.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v1: { ...prev.v1, locked: !prev.v1.locked }}))}
+                >
+                  {trackStates.v1.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
                 </Button>
               </div>
             </div>
           </div>
           <div className="flex-1 relative h-12 px-1">
-            {/* Sample Video Clips - rounded corners */}
-            <div className="absolute left-12 top-1 bottom-1 w-40 bg-clip-video/80 rounded-md border border-clip-video flex items-center justify-center text-xs font-medium shadow-sm">
-              Clip 1.mp4
+            {/* Sample Video Clips with labels and FX indicators */}
+            <div className="absolute left-12 top-1 bottom-1 w-40 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
+              <div className="flex items-center gap-1">
+                <span className="text-white text-[10px] font-semibold">Clip 1.mp4</span>
+                <span className="text-[8px] bg-accent/80 px-1 rounded">FX</span>
+              </div>
+              <div className="w-full h-1 bg-timeline-yellow/30 rounded-full">
+                <div className="w-1 h-1 bg-timeline-yellow rounded-full" />
+              </div>
             </div>
-            <div className="absolute left-56 top-1 bottom-1 w-32 bg-clip-video/80 rounded-md border border-clip-video flex items-center justify-center text-xs font-medium shadow-sm">
-              Clip 2.mp4
+            <div className="absolute left-56 top-1 bottom-1 w-32 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
+              <span className="text-white text-[10px] font-semibold">Clip 2.mp4</span>
             </div>
           </div>
         </div>
 
         {/* Audio Track 1 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center gap-1">
-          <div className="w-16 flex flex-col items-center justify-center gap-0.5 border-r border-border px-1">
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
             <div className="flex items-center gap-1 w-full justify-between">
-              <span className="text-xs text-muted-foreground font-medium">A1</span>
+              <span className="text-xs text-green-500 font-semibold">A1</span>
               <div className="flex gap-0.5">
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Volume2 className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.a1.muted ? 'text-red-500' : 'text-primary'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, a1: { ...prev.a1, muted: !prev.a1.muted }}))}
+                >
+                  {trackStates.a1.muted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Lock className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.a1.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, a1: { ...prev.a1, locked: !prev.a1.locked }}))}
+                >
+                  {trackStates.a1.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
                 </Button>
               </div>
             </div>
           </div>
           <div className="flex-1 relative h-12 px-1">
-            {/* Sample Audio Waveform */}
-            <div className="absolute left-12 top-1 bottom-1 w-40 bg-clip-audio/30 rounded-md border border-clip-audio flex items-center px-2 shadow-sm">
+            {/* Sample Audio Waveform with labels */}
+            <div className="absolute left-12 top-1 bottom-1 w-40 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
+              <span className="text-white text-[10px] font-semibold mb-0.5">Audio 1.mp3</span>
               <div className="flex gap-0.5 h-full items-center">
                 {Array.from({ length: 40 }).map((_, i) => (
                   <div
@@ -116,7 +170,8 @@ export const Timeline = () => {
                 ))}
               </div>
             </div>
-            <div className="absolute left-56 top-1 bottom-1 w-32 bg-clip-audio/30 rounded-md border border-clip-audio flex items-center px-2 shadow-sm">
+            <div className="absolute left-56 top-1 bottom-1 w-32 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
+              <span className="text-white text-[10px] font-semibold mb-0.5">Audio 2.mp3</span>
               <div className="flex gap-0.5 h-full items-center">
                 {Array.from({ length: 32 }).map((_, i) => (
                   <div
@@ -131,16 +186,26 @@ export const Timeline = () => {
         </div>
 
         {/* Video Track 2 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center gap-1">
-          <div className="w-16 flex flex-col items-center justify-center gap-0.5 border-r border-border px-1">
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
             <div className="flex items-center gap-1 w-full justify-between">
-              <span className="text-xs text-muted-foreground font-medium">V2</span>
+              <span className="text-xs text-primary font-semibold">V2</span>
               <div className="flex gap-0.5">
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Eye className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v2.visible ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, visible: !prev.v2.visible }}))}
+                >
+                  {trackStates.v2.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Lock className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v2.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, locked: !prev.v2.locked }}))}
+                >
+                  {trackStates.v2.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
                 </Button>
               </div>
             </div>
@@ -149,22 +214,33 @@ export const Timeline = () => {
         </div>
 
         {/* Audio Track 2 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center gap-1">
-          <div className="w-16 flex flex-col items-center justify-center gap-0.5 border-r border-border px-1">
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
             <div className="flex items-center gap-1 w-full justify-between">
-              <span className="text-xs text-muted-foreground font-medium">A2</span>
+              <span className="text-xs text-green-500 font-semibold">A2</span>
               <div className="flex gap-0.5">
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Volume2 className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.a2.muted ? 'text-red-500' : 'text-primary'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, a2: { ...prev.a2, muted: !prev.a2.muted }}))}
+                >
+                  {trackStates.a2.muted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
-                  <Lock className="w-3 h-3" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.a2.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, a2: { ...prev.a2, locked: !prev.a2.locked }}))}
+                >
+                  {trackStates.a2.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
                 </Button>
               </div>
             </div>
           </div>
           <div className="flex-1 relative h-12 px-1" />
         </div>
+      </div>
       </div>
     </div>
   );

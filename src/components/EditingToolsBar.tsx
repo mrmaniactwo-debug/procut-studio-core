@@ -1,0 +1,59 @@
+import { MousePointer2, Scissors, MoveHorizontal, Move, Hand, ZoomIn, Type } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useState } from "react";
+
+export const EditingToolsBar = () => {
+  const [activeTool, setActiveTool] = useState("selection");
+
+  const tools = [
+    { id: "selection", icon: MousePointer2, label: "Selection Tool", shortcut: "V" },
+    { id: "razor", icon: Scissors, label: "Razor Tool", shortcut: "C" },
+    { id: "slip", icon: MoveHorizontal, label: "Slip Tool", shortcut: "Y" },
+    { id: "slide", icon: Move, label: "Slide Tool", shortcut: "U" },
+    { id: "hand", icon: Hand, label: "Hand Tool", shortcut: "H" },
+    { id: "zoom", icon: ZoomIn, label: "Zoom Tool", shortcut: "Z" },
+    { id: "text", icon: Type, label: "Text Tool", shortcut: "T" },
+  ];
+
+  return (
+    <TooltipProvider>
+      <div className="w-12 bg-panel-dark border-r border-border flex flex-col items-center py-2 gap-1 shadow-panel">
+        {tools.map((tool) => {
+          const Icon = tool.icon;
+          return (
+            <Tooltip key={tool.id}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-9 w-9 ${
+                    activeTool === tool.id
+                      ? "bg-primary/20 text-primary border border-primary/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-panel-medium"
+                  } transition-all`}
+                  onClick={() => setActiveTool(tool.id)}
+                >
+                  <Icon className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <div className="flex items-center gap-2">
+                  <span>{tool.label}</span>
+                  <kbd className="px-1.5 py-0.5 text-xs bg-panel-dark rounded border border-border">
+                    {tool.shortcut}
+                  </kbd>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
+    </TooltipProvider>
+  );
+};

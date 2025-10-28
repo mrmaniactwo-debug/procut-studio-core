@@ -6,14 +6,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const MediaBrowser = () => {
   return (
     <div className="h-full bg-panel-medium border-r-2 border-r-primary/20 flex flex-col">
-      {/* Header */}
+      {/* Header with View Toggle */}
       <div className="h-12 border-b border-border flex items-center justify-between px-4">
         <h2 className="text-sm font-semibold text-foreground">Project Media</h2>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`h-7 w-7 ${viewMode === "grid" ? "text-primary bg-primary/20" : ""}`}
+            onClick={() => setViewMode("grid")}
+          >
             <Grid3x3 className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`h-7 w-7 ${viewMode === "list" ? "text-primary bg-primary/20" : ""}`}
+            onClick={() => setViewMode("list")}
+          >
             <List className="w-4 h-4" />
           </Button>
         </div>
