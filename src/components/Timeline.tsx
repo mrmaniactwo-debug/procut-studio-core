@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX, Headphones } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX, Headphones, Search, Maximize2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
@@ -6,10 +6,13 @@ import { useState } from "react";
 export const Timeline = () => {
   const [trackStates, setTrackStates] = useState({
     v1: { visible: true, locked: false, muted: false },
-    a1: { visible: true, locked: false, muted: false },
     v2: { visible: true, locked: false, muted: false },
+    a1: { visible: true, locked: false, muted: false },
     a2: { visible: true, locked: false, muted: false },
   });
+  
+  const [showZoomPanel, setShowZoomPanel] = useState(false);
+  const [showAudioPanel, setShowAudioPanel] = useState(false);
 
   return (
     <div className="h-80 bg-timeline-bg border-t border-primary/20 flex">
@@ -42,19 +45,73 @@ export const Timeline = () => {
           <div className="ml-4 text-sm font-mono text-foreground">00:00:00:00</div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">30 fps • 1920x1080</span>
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`h-8 w-8 ${showAudioPanel ? 'bg-primary/20 text-primary' : ''}`}
+            onClick={() => {
+              setShowAudioPanel(!showAudioPanel);
+              setShowZoomPanel(false);
+            }}
+          >
+            <Volume2 className="w-4 h-4" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`h-8 w-8 ${showZoomPanel ? 'bg-primary/20 text-primary' : ''}`}
+            onClick={() => {
+              setShowZoomPanel(!showZoomPanel);
+              setShowAudioPanel(false);
+            }}
+          >
+            <Search className="w-4 h-4" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Maximize2 className="w-4 h-4" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Settings className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Collapsible Control Panels */}
+      {showZoomPanel && (
+        <div className="h-16 bg-panel-dark border-b border-border px-4 flex items-center gap-4 animate-in slide-in-from-top">
+          <span className="text-xs text-muted-foreground font-semibold">ZOOM</span>
+          <div className="flex items-center gap-2 flex-1">
             <Button variant="ghost" size="icon" className="h-7 w-7">
               <ZoomOut className="w-3 h-3" />
             </Button>
-            <Slider defaultValue={[50]} max={100} step={1} className="w-20" />
+            <Slider defaultValue={[50]} max={100} step={1} className="flex-1 max-w-md" />
             <Button variant="ghost" size="icon" className="h-7 w-7">
               <ZoomIn className="w-3 h-3" />
             </Button>
+            <span className="text-xs text-muted-foreground ml-2">50%</span>
           </div>
+          <span className="text-xs text-muted-foreground">30 fps • 1920x1080</span>
         </div>
-      </div>
+      )}
+      
+      {showAudioPanel && (
+        <div className="h-16 bg-panel-dark border-b border-border px-4 flex items-center gap-4 animate-in slide-in-from-top">
+          <span className="text-xs text-muted-foreground font-semibold">AUDIO</span>
+          <div className="flex items-center gap-2 flex-1">
+            <VolumeX className="w-4 h-4 text-muted-foreground" />
+            <Slider defaultValue={[75]} max={100} step={1} className="flex-1 max-w-md" />
+            <Volume2 className="w-4 h-4 text-primary" />
+            <span className="text-xs text-muted-foreground ml-2">-6 dB</span>
+          </div>
+          <Button variant="ghost" size="sm" className="h-7 text-xs">
+            Reset
+          </Button>
+        </div>
+      )}
 
       {/* Timeline Ruler - Yellow accented */}
       <div className="h-8 bg-panel-dark border-b border-timeline-yellow/20 relative">
@@ -88,9 +145,37 @@ export const Timeline = () => {
 
       {/* Timeline Tracks */}
       <div className="flex-1 overflow-y-auto">
+        {/* VIDEO TRACKS SECTION */}
+        {/* Video Track 2 */}
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
+            <div className="flex items-center gap-1 w-full justify-between">
+              <span className="text-xs text-primary font-semibold">V2</span>
+              <div className="flex gap-0.5">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v2.visible ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, visible: !prev.v2.visible }}))}
+                >
+                  {trackStates.v2.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v2.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, locked: !prev.v2.locked }}))}
+                >
+                  {trackStates.v2.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 relative h-12 px-1" />
+        </div>
+
         {/* Video Track 1 */}
         <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
-          {/* Track Controls - Enhanced */}
           <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
             <div className="flex items-center gap-1 w-full justify-between">
               <span className="text-xs text-primary font-semibold">V1</span>
@@ -131,8 +216,14 @@ export const Timeline = () => {
           </div>
         </div>
 
+        {/* DIVIDER between video and audio tracks */}
+        <div className="h-8 bg-panel-dark border-y border-primary/30 flex items-center px-4">
+          <span className="text-xs text-primary font-semibold tracking-wider">AUDIO TRACKS</span>
+        </div>
+
+        {/* AUDIO TRACKS SECTION */}
         {/* Audio Track 1 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-green-500/20 flex items-center hover:bg-timeline-track/80 transition-colors">
           <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
             <div className="flex items-center gap-1 w-full justify-between">
               <span className="text-xs text-green-500 font-semibold">A1</span>
@@ -185,36 +276,8 @@ export const Timeline = () => {
           </div>
         </div>
 
-        {/* Video Track 2 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
-          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
-            <div className="flex items-center gap-1 w-full justify-between">
-              <span className="text-xs text-primary font-semibold">V2</span>
-              <div className="flex gap-0.5">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-5 w-5 ${trackStates.v2.visible ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
-                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, visible: !prev.v2.visible }}))}
-                >
-                  {trackStates.v2.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-5 w-5 ${trackStates.v2.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
-                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, locked: !prev.v2.locked }}))}
-                >
-                  {trackStates.v2.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="flex-1 relative h-12 px-1" />
-        </div>
-
         {/* Audio Track 2 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-green-500/20 flex items-center hover:bg-timeline-track/80 transition-colors">
           <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
             <div className="flex items-center gap-1 w-full justify-between">
               <span className="text-xs text-green-500 font-semibold">A2</span>

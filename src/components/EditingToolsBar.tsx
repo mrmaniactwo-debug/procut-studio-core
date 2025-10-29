@@ -1,4 +1,19 @@
-import { MousePointer2, Scissors, MoveHorizontal, Move, Hand, ZoomIn, Type } from "lucide-react";
+import { 
+  MousePointer2, 
+  Scissors, 
+  MoveHorizontal, 
+  Move, 
+  Hand, 
+  ZoomIn, 
+  Type, 
+  ArrowRight,
+  Combine,
+  RotateCcw,
+  Gauge,
+  Pen,
+  Square,
+  TypeIcon
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -13,12 +28,18 @@ export const EditingToolsBar = () => {
 
   const tools = [
     { id: "selection", icon: MousePointer2, label: "Selection Tool", shortcut: "V" },
+    { id: "track-select", icon: ArrowRight, label: "Track Select Forward Tool", shortcut: "A" },
+    { id: "ripple", icon: Combine, label: "Ripple Edit Tool", shortcut: "B" },
+    { id: "rolling", icon: RotateCcw, label: "Rolling Edit Tool", shortcut: "N" },
+    { id: "rate-stretch", icon: Gauge, label: "Rate Stretch Tool", shortcut: "R" },
     { id: "razor", icon: Scissors, label: "Razor Tool", shortcut: "C" },
     { id: "slip", icon: MoveHorizontal, label: "Slip Tool", shortcut: "Y" },
     { id: "slide", icon: Move, label: "Slide Tool", shortcut: "U" },
+    { id: "pen", icon: Pen, label: "Pen Tool", shortcut: "P" },
+    { id: "rectangle", icon: Square, label: "Rectangle Tool", shortcut: "R" },
     { id: "hand", icon: Hand, label: "Hand Tool", shortcut: "H" },
-    { id: "zoom", icon: ZoomIn, label: "Zoom Tool", shortcut: "Z" },
-    { id: "text", icon: Type, label: "Text Tool", shortcut: "T" },
+    { id: "text", icon: Type, label: "Type Tool", shortcut: "T" },
+    { id: "vertical-text", icon: TypeIcon, label: "Vertical Type Tool", shortcut: "Shift+T" },
   ];
 
   return (
