@@ -3,6 +3,7 @@ import { Timeline } from "@/components/Timeline";
 import { MediaBrowser } from "@/components/MediaBrowser";
 import { PreviewMonitor } from "@/components/PreviewMonitor";
 import { SourcePanel } from "@/components/SourcePanel";
+import { EditingToolsBar } from "@/components/EditingToolsBar";
 
 const Index = () => {
   return (
@@ -14,6 +15,9 @@ const Index = () => {
         <div className="w-80 flex-shrink-0">
           <MediaBrowser />
         </div>
+
+        {/* Editing Tools Bar */}
+        <EditingToolsBar />
 
         {/* Center & Right Section */}
         <div className="flex-1 flex flex-col">

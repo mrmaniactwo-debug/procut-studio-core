@@ -1,4 +1,18 @@
-import { MousePointer2, Scissors, MoveHorizontal, Move, Hand, ZoomIn, Type } from "lucide-react";
+import { 
+  MousePointer2, 
+  Scissors, 
+  MoveHorizontal, 
+  Move, 
+  Hand, 
+  ZoomIn, 
+  Type,
+  MousePointerClick,
+  Split,
+  Circle,
+  Square,
+  Pen,
+  AlignVerticalJustifyStart
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -13,17 +27,24 @@ export const EditingToolsBar = () => {
 
   const tools = [
     { id: "selection", icon: MousePointer2, label: "Selection Tool", shortcut: "V" },
+    { id: "track-select", icon: MousePointerClick, label: "Track Select Forward Tool", shortcut: "A" },
+    { id: "ripple", icon: Split, label: "Ripple Edit Tool", shortcut: "B" },
+    { id: "rolling", icon: Circle, label: "Rolling Edit Tool", shortcut: "N" },
+    { id: "rate-stretch", icon: MoveHorizontal, label: "Rate Stretch Tool", shortcut: "R" },
     { id: "razor", icon: Scissors, label: "Razor Tool", shortcut: "C" },
     { id: "slip", icon: MoveHorizontal, label: "Slip Tool", shortcut: "Y" },
     { id: "slide", icon: Move, label: "Slide Tool", shortcut: "U" },
+    { id: "pen", icon: Pen, label: "Pen Tool", shortcut: "P" },
+    { id: "rectangle", icon: Square, label: "Rectangle Tool", shortcut: "M" },
     { id: "hand", icon: Hand, label: "Hand Tool", shortcut: "H" },
+    { id: "text", icon: Type, label: "Type Tool", shortcut: "T" },
+    { id: "vertical-text", icon: AlignVerticalJustifyStart, label: "Vertical Type Tool", shortcut: "Shift+T" },
     { id: "zoom", icon: ZoomIn, label: "Zoom Tool", shortcut: "Z" },
-    { id: "text", icon: Type, label: "Text Tool", shortcut: "T" },
   ];
 
   return (
     <TooltipProvider>
-      <div className="w-12 bg-panel-dark border-r border-border flex flex-col items-center py-2 gap-1 shadow-panel">
+      <div className="w-14 bg-panel-dark border-r border-border flex flex-col items-center py-3 gap-0.5 shadow-panel">
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (
@@ -32,7 +53,7 @@ export const EditingToolsBar = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-9 w-9 ${
+                  className={`h-10 w-10 rounded-sm ${
                     activeTool === tool.id
                       ? "bg-primary/20 text-primary border border-primary/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-panel-medium"
