@@ -1,12 +1,7 @@
 import {
   Play,
-  Volume2,
   Maximize,
   Settings,
-  Camera,
-  Repeat,
-  MonitorPlay,
-  Save,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -66,85 +61,60 @@ export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
         </div>
       </div>
 
-      {/* Controls - Enhanced */}
-      <div className="min-h-20 border-t border-border bg-monitor-controls px-4 flex flex-col gap-3 py-2 flex-shrink-0 overflow-x-auto">
-        {/* Playback & Utility Controls */}
-        <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-[auto,1fr,auto]">
-          <div className="flex flex-wrap items-center gap-2 min-w-[16rem]">
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
-              <MonitorPlay className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
-                <path d="M0 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z" />
-              </svg>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 bg-gradient-primary hover:opacity-90 shadow-glow-primary shrink-0">
-              <Play className="w-5 h-5 text-white" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
-                <path d="M9 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1z" />
-              </svg>
-            </Button>
+      {/* Controls - Redesigned */}
+      <div className="h-16 border-t border-border bg-monitor-controls px-6 flex items-center justify-between gap-6">
+        {/* Left: Playback Controls */}
+        <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
+              <path d="M0 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z" />
+            </svg>
+          </Button>
+          <Button variant="ghost" size="icon" className="h-10 w-10 bg-gradient-primary hover:opacity-90 shadow-glow-primary">
+            <Play className="w-5 h-5 text-white" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
+              <path d="M9 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1z" />
+            </svg>
+          </Button>
+        </div>
 
-            <div className="w-px h-6 bg-border mx-1 shrink-0" />
+        {/* Center: Timecode Display */}
+        <div className="flex items-center gap-3">
+          <div className="text-base font-mono tabular-nums text-primary font-semibold tracking-wider">
+            00:00:00:00
+          </div>
+          <span className="text-muted-foreground">/</span>
+          <div className="text-base font-mono tabular-nums text-muted-foreground tracking-wider">
+            00:00:30:00
+          </div>
+        </div>
 
-            {/* Mark In/Out and additional controls */}
-            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary shrink-0">
-              Mark In
+        {/* Right: Utility Controls */}
+        <div className="flex items-center gap-3">
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1 bg-panel-dark/50 rounded px-2 py-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary">
+              <ZoomOut className="w-3.5 h-3.5" />
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary shrink-0">
-              Mark Out
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary shrink-0">
-              <Camera className="w-3.5 h-3.5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary shrink-0">
-              <Repeat className="w-3.5 h-3.5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary shrink-0">
-              <Save className="w-3.5 h-3.5" />
+            <Slider defaultValue={[50]} max={100} step={1} className="w-24" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary">
+              <ZoomIn className="w-3.5 h-3.5" />
             </Button>
           </div>
 
-          <div className="flex justify-center md:justify-center">
-            <div className="flex items-center gap-2 text-sm font-mono tabular-nums text-foreground bg-panel-dark px-3 py-1 rounded border border-border">
-              <span className="inline-flex w-[110px] justify-end">00:00:00:00</span>
-              <span>/</span>
-              <span className="inline-flex w-[110px] justify-start">00:00:30:00</span>
-            </div>
-          </div>
+          <div className="w-px h-6 bg-border" />
 
-          {/* Volume & Settings */}
-          <div className="flex flex-wrap items-center gap-3 justify-center md:justify-end md:justify-self-end min-w-[10rem]">
-            <div className="flex items-center gap-2 shrink-0">
-              <Volume2 className="w-4 h-4 text-muted-foreground" />
-              <Slider
-                defaultValue={[70]}
-                max={100}
-                step={1}
-                className="w-24 min-w-[5rem] shrink-0"
-              />
-              <div className="flex items-center gap-1 ml-2">
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <ZoomOut className="w-3 h-3" />
-                </Button>
-                <Slider defaultValue={[50]} max={100} step={1} className="w-20" />
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <ZoomIn className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
-              <Maximize className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
-              <Settings className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* Action Buttons */}
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+            <Maximize className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+            <Settings className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>
