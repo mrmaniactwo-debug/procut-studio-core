@@ -16,7 +16,7 @@ export const SourcePanel = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   return (
-    <div className="h-full bg-panel-medium border-r-2 border-r-primary/20 border-t border-border flex flex-col">
+    <div className="h-full bg-panel-medium border-r-2 border-r-primary/20 border-t border-border flex flex-col overflow-hidden">
       {/* Header */}
       <div className="h-12 border-b border-border flex items-center justify-between px-4">
         <h2 className="text-sm font-semibold text-foreground">Source Monitor</h2>
@@ -43,7 +43,7 @@ export const SourcePanel = () => {
       </div>
 
       {/* Controls */}
-      <div className="h-16 border-t border-border bg-monitor-controls px-4 flex items-center justify-between">
+      <div className="min-h-16 border-t border-border bg-monitor-controls px-4 flex items-center justify-between flex-shrink-0 overflow-x-auto gap-2 flex-wrap py-2">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Button 

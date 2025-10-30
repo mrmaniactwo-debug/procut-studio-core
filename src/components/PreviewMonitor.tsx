@@ -4,7 +4,7 @@ import { Slider } from "@/components/ui/slider";
 
 export const PreviewMonitor = () => {
   return (
-    <div className="h-full bg-panel-medium border-l-2 border-l-primary/20 border-t border-border flex flex-col">
+    <div className="h-full bg-panel-medium border-l-2 border-l-primary/20 border-t border-border flex flex-col overflow-hidden">
       {/* Header */}
       <div className="h-12 border-b border-border flex items-center justify-between px-4">
         <h2 className="text-sm font-semibold text-foreground">Program Monitor</h2>
@@ -46,7 +46,7 @@ export const PreviewMonitor = () => {
       </div>
 
       {/* Controls - Enhanced */}
-      <div className="h-20 border-t border-border bg-monitor-controls px-4 flex flex-col gap-2 py-2">
+      <div className="min-h-20 border-t border-border bg-monitor-controls px-4 flex flex-col gap-2 py-2 flex-shrink-0 overflow-x-auto">
         {/* Playback Controls */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">

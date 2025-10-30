@@ -26,9 +26,9 @@ const Index = () => {
 
         {/* Center & Right Section */}
         <ResizablePanel defaultSize={80}>
-          <div className="h-full flex flex-col">
+          <ResizablePanelGroup direction="vertical">
             {/* Top Row - Monitors */}
-            <div className="flex-1 overflow-hidden">
+            <ResizablePanel defaultSize={50} minSize={25}>
               <ResizablePanelGroup direction="horizontal">
                 {/* Source Panel */}
                 <ResizablePanel defaultSize={50} minSize={30}>
@@ -42,18 +42,22 @@ const Index = () => {
                   <PreviewMonitor />
                 </ResizablePanel>
               </ResizablePanelGroup>
-            </div>
+            </ResizablePanel>
 
-            {/* Editing Tools Bar - Horizontal (fixed height) */}
-            <div className="h-14 flex-shrink-0">
+            <ResizableHandle withHandle />
+
+            {/* Editing Tools Bar */}
+            <ResizablePanel defaultSize={10} minSize={8} maxSize={15}>
               <EditingToolsBar />
-            </div>
+            </ResizablePanel>
+
+            <ResizableHandle withHandle />
 
             {/* Bottom - Timeline */}
-            <div className="flex-1 overflow-hidden">
+            <ResizablePanel defaultSize={40} minSize={20}>
               <Timeline />
-            </div>
-          </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

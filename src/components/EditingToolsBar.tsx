@@ -44,7 +44,7 @@ export const EditingToolsBar = () => {
 
   return (
     <TooltipProvider>
-      <div className="h-14 bg-panel-dark border-b border-border flex items-center justify-center px-3 gap-0.5 shadow-panel">
+      <div className="h-full bg-panel-dark border-b border-border flex items-center justify-start px-3 gap-0.5 shadow-panel overflow-x-auto overflow-y-hidden">
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (
