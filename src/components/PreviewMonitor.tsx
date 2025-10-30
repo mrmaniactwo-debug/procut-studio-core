@@ -7,6 +7,8 @@ import {
   Repeat,
   MonitorPlay,
   Save,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -126,6 +128,15 @@ export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
                 step={1}
                 className="w-24 min-w-[5rem] shrink-0"
               />
+              <div className="flex items-center gap-1 ml-2">
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <ZoomOut className="w-3 h-3" />
+                </Button>
+                <Slider defaultValue={[50]} max={100} step={1} className="w-20" />
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <ZoomIn className="w-3 h-3" />
+                </Button>
+              </div>
             </div>
             <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
               <Maximize className="w-4 h-4" />

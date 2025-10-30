@@ -43,16 +43,7 @@ export const Timeline = () => {
         </div>
         
         <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">30 fps • 1920x1080</span>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <ZoomOut className="w-3 h-3" />
-            </Button>
-            <Slider defaultValue={[50]} max={100} step={1} className="w-20" />
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <ZoomIn className="w-3 h-3" />
-            </Button>
-          </div>
+          {/* Zoom controls moved to PreviewMonitor (near volume) */}
         </div>
       </div>
 
