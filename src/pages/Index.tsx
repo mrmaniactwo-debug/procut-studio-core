@@ -16,9 +16,6 @@ const Index = () => {
           <MediaBrowser />
         </div>
 
-        {/* Editing Tools Bar */}
-        <EditingToolsBar />
-
         {/* Center & Right Section */}
         <div className="flex-1 flex flex-col">
           {/* Top Row - Monitors */}
@@ -33,6 +30,9 @@ const Index = () => {
               <PreviewMonitor />
             </div>
           </div>
+
+          {/* Editing Tools Bar - Horizontal */}
+          <EditingToolsBar />
 
           {/* Bottom - Timeline */}
           <Timeline />

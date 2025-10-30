@@ -44,7 +44,7 @@ export const EditingToolsBar = () => {
 
   return (
     <TooltipProvider>
-      <div className="w-14 bg-panel-dark border-r border-border flex flex-col items-center py-3 gap-0.5 shadow-panel">
+      <div className="h-14 bg-panel-dark border-b border-border flex items-center justify-center px-3 gap-0.5 shadow-panel">
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (
@@ -63,7 +63,7 @@ export const EditingToolsBar = () => {
                   <Icon className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="bottom">
                 <div className="flex items-center gap-2">
                   <span>{tool.label}</span>
                   <kbd className="px-1.5 py-0.5 text-xs bg-panel-dark rounded border border-border">
