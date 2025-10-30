@@ -38,13 +38,13 @@ const Index = () => {
               <PreviewMonitor focusMode />
             </ResizablePanel>
 
-            <ResizableHandle withHandle />
+            <ResizableHandle />
 
             <ResizablePanel defaultSize={12} minSize={8} maxSize={18}>
               <EditingToolsBar />
             </ResizablePanel>
 
-            <ResizableHandle withHandle />
+            <ResizableHandle />
 
             <ResizablePanel defaultSize={28} minSize={20}>
               <Timeline />
@@ -57,20 +57,20 @@ const Index = () => {
               <MediaBrowser />
             </ResizablePanel>
 
-            <ResizableHandle withHandle />
+            <ResizableHandle />
 
             {/* Center & Right Section */}
             <ResizablePanel defaultSize={80}>
               <ResizablePanelGroup direction="vertical">
                 {/* Top Row - Monitors */}
-                <ResizablePanel defaultSize={50} minSize={25}>
+                <ResizablePanel defaultSize={60} minSize={58} maxSize={75}>
                   <ResizablePanelGroup direction="horizontal">
                     {/* Source Panel */}
                     <ResizablePanel defaultSize={50} minSize={30}>
                       <SourcePanel />
                     </ResizablePanel>
 
-                    <ResizableHandle withHandle />
+                    <ResizableHandle />
 
                     {/* Preview Monitor */}
                     <ResizablePanel defaultSize={50} minSize={30}>
@@ -79,17 +79,17 @@ const Index = () => {
                   </ResizablePanelGroup>
                 </ResizablePanel>
 
-                <ResizableHandle withHandle />
+                <ResizableHandle />
 
                 {/* Editing Tools Bar */}
-                <ResizablePanel defaultSize={10} minSize={8} maxSize={15}>
+                <ResizablePanel defaultSize={7} minSize={6} maxSize={12}>
                   <EditingToolsBar />
                 </ResizablePanel>
 
-                <ResizableHandle withHandle />
+                <ResizableHandle />
 
                 {/* Bottom - Timeline */}
-                <ResizablePanel defaultSize={40} minSize={20}>
+                <ResizablePanel defaultSize={33} minSize={25} maxSize={40}>
                   <Timeline />
                 </ResizablePanel>
               </ResizablePanelGroup>

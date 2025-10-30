@@ -79,6 +79,34 @@ export const Timeline = () => {
 
   {/* Timeline Tracks */}
   <div className="flex-1 overflow-y-auto timeline-scrollbar">
+        {/* Video Track 2 */}
+        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
+          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
+            <div className="flex items-center gap-1 w-full justify-between">
+              <span className="text-xs text-primary font-semibold">V2</span>
+              <div className="flex gap-0.5">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v2.visible ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, visible: !prev.v2.visible }}))}
+                >
+                  {trackStates.v2.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-5 w-5 ${trackStates.v2.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
+                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, locked: !prev.v2.locked }}))}
+                >
+                  {trackStates.v2.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 relative h-12 px-1" />
+        </div>
+
         {/* Video Track 1 */}
         <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
           {/* Track Controls - Enhanced */}
@@ -121,6 +149,9 @@ export const Timeline = () => {
             </div>
           </div>
         </div>
+
+        {/* Separator between Video and Audio */}
+        <div className="h-1 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30 border-y border-primary/20" />
 
         {/* Audio Track 1 */}
         <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
@@ -174,34 +205,6 @@ export const Timeline = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Video Track 2 */}
-        <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
-          <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1">
-            <div className="flex items-center gap-1 w-full justify-between">
-              <span className="text-xs text-primary font-semibold">V2</span>
-              <div className="flex gap-0.5">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-5 w-5 ${trackStates.v2.visible ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
-                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, visible: !prev.v2.visible }}))}
-                >
-                  {trackStates.v2.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-5 w-5 ${trackStates.v2.locked ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground`}
-                  onClick={() => setTrackStates(prev => ({ ...prev, v2: { ...prev.v2, locked: !prev.v2.locked }}))}
-                >
-                  {trackStates.v2.locked ? <Lock className="w-3 h-3" /> : <LockOpen className="w-3 h-3" />}
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="flex-1 relative h-12 px-1" />
         </div>
 
         {/* Audio Track 2 */}
