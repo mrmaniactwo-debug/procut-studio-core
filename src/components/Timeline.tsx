@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX, Headphones } from "lucide-react";
+import { Play, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
@@ -12,7 +12,7 @@ export const Timeline = () => {
   });
 
   return (
-    <div className="h-80 bg-timeline-bg border-t border-primary/20 flex">
+  <div className="h-full min-h-[16rem] bg-timeline-bg border-t border-primary/20 flex">
       {/* Audio Level Meter - Right Side */}
       <div className="w-12 bg-panel-dark border-l border-border flex flex-col items-center py-2">
         <div className="text-[10px] text-muted-foreground mb-2 rotate-0 writing-mode-vertical">AUDIO</div>
@@ -86,8 +86,8 @@ export const Timeline = () => {
         </div>
       </div>
 
-      {/* Timeline Tracks */}
-      <div className="flex-1 overflow-y-auto">
+  {/* Timeline Tracks */}
+  <div className="flex-1 overflow-y-auto timeline-scrollbar">
         {/* Video Track 1 */}
         <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
           {/* Track Controls - Enhanced */}

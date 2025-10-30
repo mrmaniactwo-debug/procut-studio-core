@@ -53,7 +53,7 @@ export const EditingToolsBar = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-sm ${
+                  className={`h-10 w-10 rounded-sm shrink-0 ${
                     activeTool === tool.id
                       ? "bg-primary/20 text-primary border border-primary/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-panel-medium"

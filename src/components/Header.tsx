@@ -1,13 +1,13 @@
-import { 
-  FileVideo, 
-  Save, 
-  Undo2, 
-  Redo2, 
-  Settings, 
+import {
+  FileVideo,
+  Save,
+  Undo2,
+  Redo2,
+  Settings,
   Upload,
   Download,
   Scissors,
-  ChevronDown
+  Focus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export const Header = () => {
+type HeaderProps = {
+  isFocusMode: boolean;
+  onToggleFocusMode: () => void;
+};
+
+export const Header = ({ isFocusMode, onToggleFocusMode }: HeaderProps) => {
   return (
     <TooltipProvider>
       <header className="h-14 bg-panel-dark border-b border-border flex items-center justify-between px-4">
@@ -119,6 +124,23 @@ export const Header = () => {
         </Tooltip>
         
         <div className="w-px h-6 bg-border mx-2" />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isFocusMode ? "secondary" : "ghost"}
+              size="sm"
+              className="text-xs font-medium"
+              onClick={onToggleFocusMode}
+            >
+              <Focus className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Focus</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isFocusMode ? "Exit focus mode" : "Expand preview & timeline"}
+          </TooltipContent>
+        </Tooltip>
         
         {/* Workspace Switcher */}
         <select className="text-xs bg-panel-light border border-border rounded px-3 py-1.5 text-foreground hover:border-primary transition-colors cursor-pointer">

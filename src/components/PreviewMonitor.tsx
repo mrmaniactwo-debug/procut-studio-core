@@ -1,15 +1,34 @@
-import { Play, Pause, Volume2, Maximize, Settings, Camera, Repeat } from "lucide-react";
+import {
+  Play,
+  Volume2,
+  Maximize,
+  Settings,
+  Camera,
+  Repeat,
+  MonitorPlay,
+  Save,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 
-export const PreviewMonitor = () => {
+type PreviewMonitorProps = {
+  focusMode?: boolean;
+};
+
+export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
   return (
     <div className="h-full bg-panel-medium border-l-2 border-l-primary/20 border-t border-border flex flex-col overflow-hidden">
       {/* Header */}
       <div className="h-12 border-b border-border flex items-center justify-between px-4">
-        <h2 className="text-sm font-semibold text-foreground">Program Monitor</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold text-foreground">Program Monitor</h2>
+          <span className="rounded bg-panel-light px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Sequence
+          </span>
+        </div>
         <div className="flex items-center gap-2">
-          <select className="text-xs bg-input border border-border rounded px-2 py-1 text-foreground">
+          <select className="text-xs bg-input border border-border rounded px-2 py-1 text-foreground shrink-0 min-w-[7rem]">
             <option>Full Quality</option>
             <option>1/2 Quality</option>
             <option>1/4 Quality</option>
@@ -46,67 +65,74 @@ export const PreviewMonitor = () => {
       </div>
 
       {/* Controls - Enhanced */}
-      <div className="min-h-20 border-t border-border bg-monitor-controls px-4 flex flex-col gap-2 py-2 flex-shrink-0 overflow-x-auto">
-        {/* Playback Controls */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+      <div className="min-h-20 border-t border-border bg-monitor-controls px-4 flex flex-col gap-3 py-2 flex-shrink-0 overflow-x-auto">
+        {/* Playback & Utility Controls */}
+        <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-[auto,1fr,auto]">
+          <div className="flex flex-wrap items-center gap-2 min-w-[16rem]">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
+              <MonitorPlay className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z"/>
-                <path d="M0 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z"/>
+                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
+                <path d="M0 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z" />
               </svg>
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 bg-gradient-primary hover:opacity-90 shadow-glow-primary">
+            <Button variant="ghost" size="icon" className="h-9 w-9 bg-gradient-primary hover:opacity-90 shadow-glow-primary shrink-0">
               <Play className="w-5 h-5 text-white" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z"/>
-                <path d="M9 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1z"/>
+                <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
+                <path d="M9 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1z" />
               </svg>
             </Button>
-            
-            <div className="w-px h-6 bg-border mx-1" />
-            
+
+            <div className="w-px h-6 bg-border mx-1 shrink-0" />
+
             {/* Mark In/Out and additional controls */}
-            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary">
+            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary shrink-0">
               Mark In
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary">
+            <Button variant="ghost" size="sm" className="h-7 text-xs hover:text-primary shrink-0">
               Mark Out
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary">
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary shrink-0">
               <Camera className="w-3.5 h-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary">
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary shrink-0">
               <Repeat className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary shrink-0">
+              <Save className="w-3.5 h-3.5" />
             </Button>
           </div>
 
+          <div className="flex justify-center md:justify-center">
+            <div className="flex items-center gap-2 text-sm font-mono tabular-nums text-foreground bg-panel-dark px-3 py-1 rounded border border-border">
+              <span className="inline-flex w-[110px] justify-end">00:00:00:00</span>
+              <span>/</span>
+              <span className="inline-flex w-[110px] justify-start">00:00:30:00</span>
+            </div>
+          </div>
+
           {/* Volume & Settings */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3 justify-center md:justify-end md:justify-self-end min-w-[10rem]">
+            <div className="flex items-center gap-2 shrink-0">
               <Volume2 className="w-4 h-4 text-muted-foreground" />
-              <Slider 
-                defaultValue={[70]} 
-                max={100} 
+              <Slider
+                defaultValue={[70]}
+                max={100}
                 step={1}
-                className="w-20"
+                className="w-24 min-w-[5rem] shrink-0"
               />
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
               <Maximize className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary shrink-0">
               <Settings className="w-4 h-4" />
             </Button>
-          </div>
-        </div>
-        
-        {/* Timecode Display */}
-        <div className="flex items-center justify-center">
-          <div className="text-sm font-mono text-foreground bg-panel-dark px-3 py-1 rounded border border-border">
-            00:00:00:00 / 00:00:30:00
           </div>
         </div>
       </div>

@@ -18,17 +18,18 @@ export const SourcePanel = () => {
   return (
     <div className="h-full bg-panel-medium border-r-2 border-r-primary/20 border-t border-border flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="h-12 border-b border-border flex items-center justify-between px-4">
-        <h2 className="text-sm font-semibold text-foreground">Source Monitor</h2>
-        <Button size="sm" variant="ghost" className="text-xs h-7 gap-1.5">
-          <Scissors className="w-3 h-3" />
-          Set In/Out
-        </Button>
+      <div className="h-12 border-b border-border flex items-center px-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold text-foreground">Source Monitor</h2>
+          <span className="rounded bg-panel-light px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Project
+          </span>
+        </div>
       </div>
 
       {/* Monitor Display */}
       <div className="flex-1 bg-monitor-bg flex items-center justify-center p-2">
-        <div className="relative w-full aspect-video bg-black rounded border border-border overflow-hidden">
+        <div className="relative w-full max-w-3xl aspect-video bg-black rounded border border-border overflow-hidden">
           {/* Placeholder */}
           <div className="absolute inset-0 bg-gradient-to-br from-panel-dark via-panel-medium to-panel-dark flex items-center justify-center">
             <div className="text-center">
@@ -49,7 +50,7 @@ export const SourcePanel = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              className={`h-8 w-8 ${isPlaying ? 'text-primary' : ''}`}
+              className={`h-8 w-8 shrink-0 ${isPlaying ? 'text-primary' : ''}`}
               onClick={() => setIsPlaying(!isPlaying)}
             >
               <Play className="w-4 h-4" />
@@ -58,7 +59,7 @@ export const SourcePanel = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6"
+                className="h-6 w-6 shrink-0"
                 onClick={() => {
                   if (currentClip) {
                     setCurrentTime(Math.max(0, currentTime - 1));
@@ -70,7 +71,7 @@ export const SourcePanel = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6"
+                className="h-6 w-6 shrink-0"
                 onClick={() => {
                   if (currentClip) {
                     setCurrentTime(Math.min(parseFloat(currentClip.duration), currentTime + 1));
@@ -81,24 +82,25 @@ export const SourcePanel = () => {
               </Button>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="text-xs font-mono text-muted-foreground">
-              {currentClip ? 
-                `${Math.floor(currentTime / 60).toString().padStart(2, '0')}:${Math.floor(currentTime % 60).toString().padStart(2, '0')}` :
-                '--:--'
-              }
-            </div>
-            <span className="text-xs text-muted-foreground">/</span>
-            <div className="text-xs font-mono text-muted-foreground">
-              {currentClip ? currentClip.duration : '--:--'}
-            </div>
+          <div className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+            <span className="inline-flex w-[70px] justify-end">
+              {currentClip
+                ? `${Math.floor(currentTime / 60).toString().padStart(2, "0")}:${Math.floor(currentTime % 60)
+                    .toString()
+                    .padStart(2, "0")}`
+                : "--:--"}
+            </span>
+            <span>/</span>
+            <span className="inline-flex w-[70px]">
+              {currentClip ? currentClip.duration : "--:--"}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button 
             size="sm" 
             variant="outline"
-            className="h-8"
+            className="h-8 shrink-0"
             onClick={() => {
               if (currentClip) {
                 setCurrentClip({
@@ -113,7 +115,7 @@ export const SourcePanel = () => {
           <Button 
             size="sm" 
             variant="outline"
-            className="h-8"
+            className="h-8 shrink-0"
             onClick={() => {
               if (currentClip) {
                 setCurrentClip({
@@ -127,7 +129,7 @@ export const SourcePanel = () => {
           </Button>
           <Button 
             size="sm" 
-            className="bg-gradient-primary hover:opacity-90 text-white gap-2 h-8 shadow-glow-primary"
+            className="bg-gradient-primary hover:opacity-90 text-white gap-2 h-8 shadow-glow-primary shrink-0"
             disabled={!currentClip}
             onClick={() => {
               if (currentClip) {
