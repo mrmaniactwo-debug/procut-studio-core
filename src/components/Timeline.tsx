@@ -1,15 +1,108 @@
-import { Play, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
+import { useMedia } from "@/context/MediaContext";
+import { usePlayback } from "@/context/PlaybackContext";
 
 export const Timeline = () => {
+  const { timelineClips, updateClipPosition } = useMedia();
+  const { isPlaying, currentTime, duration, setIsPlaying, setCurrentTime } = usePlayback();
   const [trackStates, setTrackStates] = useState({
     v1: { visible: true, locked: false, muted: false },
     a1: { visible: true, locked: false, muted: false },
     v2: { visible: true, locked: false, muted: false },
     a2: { visible: true, locked: false, muted: false },
   });
+  const [draggingClip, setDraggingClip] = useState<{id: string; track: string; offsetX: number} | null>(null);
+
+  // Convert seconds to pixels (1 second = 20 pixels for now)
+  const PIXELS_PER_SECOND = 20;
+
+  const formatTimecode = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const frames = Math.floor((seconds % 1) * 30);
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}:${frames.toString().padStart(2, '0')}`;
+  };
+
+  const handleClipDragStart = (e: React.DragEvent, clipId: string, track: string, startTime: number) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    setDraggingClip({ id: clipId, track, offsetX });
+  };
+
+  const handleClipDrop = (e: React.DragEvent, targetTrack: string) => {
+    e.preventDefault();
+    if (!draggingClip) return;
+
+    // Calculate new start time based on drop position
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - draggingClip.offsetX;
+    const newStartTime = Math.max(0, x / PIXELS_PER_SECOND);
+
+    // Update clip position
+    updateClipPosition(draggingClip.id, targetTrack as any, newStartTime);
+    setDraggingClip(null);
+  };
+
+  const renderClip = (clip: any, trackType: 'video' | 'audio') => {
+    const widthPx = clip.duration * PIXELS_PER_SECOND;
+    const leftPx = clip.startTime * PIXELS_PER_SECOND;
+    const maxNameWidth = widthPx - 8; // Padding
+
+    if (trackType === 'video') {
+      return (
+        <div
+          key={clip.id}
+          draggable
+          onDragStart={(e) => handleClipDragStart(e, clip.id, 'v1', clip.startTime)}
+          className="absolute top-1 bottom-1 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-move"
+          style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
+        >
+          {clip.thumbnail && (
+            <img 
+              src={clip.thumbnail} 
+              alt={clip.name} 
+              className="absolute inset-0 w-full h-full object-cover opacity-30 rounded pointer-events-none" 
+            />
+          )}
+          <div className="relative z-10 flex items-center gap-1 max-w-full overflow-hidden">
+            <span className="text-white text-[10px] font-semibold truncate" style={{ maxWidth: `${maxNameWidth}px` }}>
+              {clip.name}
+            </span>
+          </div>
+          <div className="relative z-10 w-full h-1 bg-timeline-yellow/30 rounded-full">
+            <div className="w-1 h-1 bg-timeline-yellow rounded-full" />
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          key={clip.id}
+          draggable
+          onDragStart={(e) => handleClipDragStart(e, clip.id, 'a1', clip.startTime)}
+          className="absolute top-1 bottom-1 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-move"
+          style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
+        >
+          <span className="text-white text-[10px] font-semibold mb-0.5 truncate" style={{ maxWidth: `${maxNameWidth}px` }}>
+            {clip.name}
+          </span>
+          <div className="flex gap-0.5 h-full items-center overflow-hidden">
+            {Array.from({ length: Math.min(40, Math.floor(widthPx / 3)) }).map((_, i) => (
+              <div
+                key={i}
+                className="w-0.5 bg-clip-audio rounded-full flex-shrink-0"
+                style={{ height: `${20 + Math.random() * 60}%` }}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+  };
 
   return (
   <div className="h-full min-h-[16rem] bg-timeline-bg border-t border-primary/20 flex">
@@ -30,16 +123,35 @@ export const Timeline = () => {
       {/* Timeline Controls */}
       <div className="h-12 bg-panel-medium border-b border-border flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={() => setCurrentTime(0)}
+          >
             <SkipBack className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90">
-            <Play className="w-5 h-5 text-primary-foreground" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9 bg-primary hover:bg-primary/90"
+            onClick={() => setIsPlaying(!isPlaying)}
+          >
+            {isPlaying ? (
+              <Pause className="w-5 h-5 text-primary-foreground" />
+            ) : (
+              <Play className="w-5 h-5 text-primary-foreground" />
+            )}
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={() => setCurrentTime(duration)}
+          >
             <SkipForward className="w-4 h-4" />
           </Button>
-          <div className="ml-4 text-sm font-mono text-foreground">00:00:00:00</div>
+          <div className="ml-4 text-sm font-mono text-foreground">{formatTimecode(currentTime)}</div>
         </div>
         
         <div className="flex items-center gap-3">
@@ -70,8 +182,11 @@ export const Timeline = () => {
           <div className="absolute left-32 top-0 w-2 h-2 bg-green-500 rounded-sm shadow-sm" />
           <div className="absolute left-64 top-0 w-2 h-2 bg-blue-500 rounded-sm shadow-sm" />
         </div>
-        {/* Playhead - Yellow glowing */}
-        <div className="absolute left-20 top-0 bottom-0 w-0.5 bg-timeline-yellow shadow-glow-yellow">
+        {/* Playhead - Yellow glowing - synced with playback */}
+        <div 
+          className="absolute top-0 bottom-0 w-0.5 bg-timeline-yellow shadow-glow-yellow transition-all duration-75"
+          style={{ left: `${(currentTime * PIXELS_PER_SECOND)}px` }}
+        >
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-timeline-yellow rounded-sm shadow-glow-yellow" />
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-timeline-yellow" />
         </div>
@@ -104,7 +219,14 @@ export const Timeline = () => {
               </div>
             </div>
           </div>
-          <div className="flex-1 relative h-12 px-1" />
+          <div 
+            className="flex-1 relative h-12 px-1"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleClipDrop(e, 'v2')}
+          >
+            {/* Video 2 clips */}
+            {timelineClips.v2.map((clip) => renderClip(clip, 'video'))}
+          </div>
         </div>
 
         {/* Video Track 1 */}
@@ -133,20 +255,13 @@ export const Timeline = () => {
               </div>
             </div>
           </div>
-          <div className="flex-1 relative h-12 px-1">
-            {/* Sample Video Clips with labels and FX indicators */}
-            <div className="absolute left-12 top-1 bottom-1 w-40 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
-              <div className="flex items-center gap-1">
-                <span className="text-white text-[10px] font-semibold">Clip 1.mp4</span>
-                <span className="text-[8px] bg-accent/80 px-1 rounded">FX</span>
-              </div>
-              <div className="w-full h-1 bg-timeline-yellow/30 rounded-full">
-                <div className="w-1 h-1 bg-timeline-yellow rounded-full" />
-              </div>
-            </div>
-            <div className="absolute left-56 top-1 bottom-1 w-32 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
-              <span className="text-white text-[10px] font-semibold">Clip 2.mp4</span>
-            </div>
+          <div 
+            className="flex-1 relative h-12 px-1"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleClipDrop(e, 'v1')}
+          >
+            {/* Video 1 clips */}
+            {timelineClips.v1.map((clip) => renderClip(clip, 'video'))}
           </div>
         </div>
 
@@ -178,32 +293,13 @@ export const Timeline = () => {
               </div>
             </div>
           </div>
-          <div className="flex-1 relative h-12 px-1">
-            {/* Sample Audio Waveform with labels */}
-            <div className="absolute left-12 top-1 bottom-1 w-40 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
-              <span className="text-white text-[10px] font-semibold mb-0.5">Audio 1.mp3</span>
-              <div className="flex gap-0.5 h-full items-center">
-                {Array.from({ length: 40 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-0.5 bg-clip-audio rounded-full"
-                    style={{ height: `${20 + Math.random() * 60}%` }}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="absolute left-56 top-1 bottom-1 w-32 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-pointer">
-              <span className="text-white text-[10px] font-semibold mb-0.5">Audio 2.mp3</span>
-              <div className="flex gap-0.5 h-full items-center">
-                {Array.from({ length: 32 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-0.5 bg-clip-audio rounded-full"
-                    style={{ height: `${20 + Math.random() * 60}%` }}
-                  />
-                ))}
-              </div>
-            </div>
+          <div 
+            className="flex-1 relative h-12 px-1"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleClipDrop(e, 'a1')}
+          >
+            {/* Audio 1 clips */}
+            {timelineClips.a1.map((clip) => renderClip(clip, 'audio'))}
           </div>
         </div>
 
@@ -232,7 +328,14 @@ export const Timeline = () => {
               </div>
             </div>
           </div>
-          <div className="flex-1 relative h-12 px-1" />
+          <div 
+            className="flex-1 relative h-12 px-1"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleClipDrop(e, 'a2')}
+          >
+            {/* Audio 2 clips */}
+            {timelineClips.a2.map((clip) => renderClip(clip, 'audio'))}
+          </div>
         </div>
       </div>
       </div>
