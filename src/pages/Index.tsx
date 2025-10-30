@@ -4,40 +4,58 @@ import { MediaBrowser } from "@/components/MediaBrowser";
 import { PreviewMonitor } from "@/components/PreviewMonitor";
 import { SourcePanel } from "@/components/SourcePanel";
 import { EditingToolsBar } from "@/components/EditingToolsBar";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
 const Index = () => {
   return (
     <div className="h-screen w-full flex flex-col bg-background text-foreground overflow-hidden">
       <Header />
       
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Resizable Layout */}
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
         {/* Left Panel - Media Browser */}
-        <div className="w-80 flex-shrink-0">
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
           <MediaBrowser />
-        </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
 
         {/* Center & Right Section */}
-        <div className="flex-1 flex flex-col">
-          {/* Top Row - Monitors */}
-          <div className="flex-1 flex overflow-hidden">
-            {/* Source Panel */}
-            <div className="flex-1">
-              <SourcePanel />
-            </div>
-            
-            {/* Preview Monitor */}
-            <div className="flex-1">
-              <PreviewMonitor />
-            </div>
-          </div>
+        <ResizablePanel defaultSize={80}>
+          <ResizablePanelGroup direction="vertical">
+            {/* Top Row - Monitors */}
+            <ResizablePanel defaultSize={50} minSize={30}>
+              <ResizablePanelGroup direction="horizontal">
+                {/* Source Panel */}
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <SourcePanel />
+                </ResizablePanel>
 
-          {/* Editing Tools Bar - Horizontal */}
-          <EditingToolsBar />
+                <ResizableHandle withHandle />
 
-          {/* Bottom - Timeline */}
-          <Timeline />
-        </div>
-      </div>
+                {/* Preview Monitor */}
+                <ResizablePanel defaultSize={50} minSize={30}>
+                  <PreviewMonitor />
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </ResizablePanel>
+
+            {/* Editing Tools Bar - Horizontal (fixed height) */}
+            <div className="h-14 flex-shrink-0">
+              <EditingToolsBar />
+            </div>
+
+            {/* Bottom - Timeline */}
+            <ResizablePanel defaultSize={50} minSize={20}>
+              <Timeline />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
