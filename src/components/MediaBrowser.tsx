@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-
+//2
 export const MediaBrowser = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [mediaFiles, setMediaFiles] = useState<Array<{ id: string; name: string; type: string; duration?: string; resolution?: string }>>([]);
