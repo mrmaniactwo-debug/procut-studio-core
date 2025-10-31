@@ -12,7 +12,8 @@ type TimelineProps = {
 };
 
 export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
-  const { timelineClips, updateClipPosition, addClipToTimeline, moveClip } = useMedia();
+  const { timelineClips, updateClipPosition, addClipToTimeline, moveClip, removeClip, updateClip } = useMedia();
+    const { toggleLinkForMedia } = useMedia();
   const { isPlaying, currentTime, duration, setIsPlaying, setCurrentTime } = usePlayback();
   const [trackStates, setTrackStates] = useState({
     v1: { visible: true, locked: false, muted: false },
@@ -20,6 +21,9 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
     v2: { visible: true, locked: false, muted: false },
     a2: { visible: true, locked: false, muted: false },
   });
+    const [dropMode, setDropMode] = useState<'insert' | 'overwrite'>('overwrite');
+  const [selectedClipIds, setSelectedClipIds] = useState<Set<string>>(new Set());
+  const [showHelp, setShowHelp] = useState(false);
   type TrackKey = 'v1' | 'v2' | 'a1' | 'a2';
   const [draggingClip, setDraggingClip] = useState<{id: string; track: TrackKey; offsetX: number} | null>(null);
   const dragImageRef = useRef<HTMLElement | null>(null);
@@ -87,9 +91,31 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
     // account for horizontal scroll offset
     const rawStartTime = Math.max(0, (x + scrollX - (draggingClip ? draggingClip.offsetX : 0)) / Math.max(1, pixelsPerSecond));
     const newStartTime = snapTime(rawStartTime, e.altKey);
+  const forceInsert = e.ctrlKey || e.metaKey; // Ctrl/Cmd forces insert
+  const useInsert = forceInsert || dropMode === 'insert';
 
     // Case 1: internal drag of an existing timeline clip
     if (draggingClip) {
+      if (useInsert) {
+        // ripple insert: shift clips on target track at/after start by duration of moving clip
+        const moving = [...timelineClips.v1, ...timelineClips.v2, ...timelineClips.a1, ...timelineClips.a2].find(c=>c.id===draggingClip.id);
+        const shiftBy = moving ? moving.duration : 0;
+        if (shiftBy > 0) {
+          // ripple shift on target track
+          const trackList = timelineClips[targetTrack];
+          const toShift = trackList.filter(c => c.startTime >= newStartTime && c.id !== draggingClip.id);
+          toShift.sort((a,b)=>a.startTime - b.startTime);
+          toShift.forEach(c => updateClipPosition(c.id, targetTrack, c.startTime + shiftBy));
+        }
+      } else {
+        // overwrite: remove overlapped clips on target track
+        const moving = [...timelineClips.v1, ...timelineClips.v2, ...timelineClips.a1, ...timelineClips.a2].find(c=>c.id===draggingClip.id);
+        const start = newStartTime;
+        const end = start + (moving?.duration ?? 0);
+        const overlapped = timelineClips[targetTrack].filter(c => !(c.id===draggingClip.id) && (c.startTime < end && (c.startTime + c.duration) > start));
+        overlapped.forEach(c => removeClip(c.id, targetTrack));
+      }
+      // finally move/position the dragged clip
       if (draggingClip.track === targetTrack) {
         updateClipPosition(draggingClip.id, targetTrack, newStartTime);
       } else {
@@ -122,7 +148,21 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
             thumbnail: file.thumbnail,
             file: file.file,
           };
-          addClipToTimeline(clip, targetTrack);
+          if (useInsert) {
+            // ripple shift target track
+            const trackList = timelineClips[targetTrack];
+            const toShift = trackList.filter(c => c.startTime >= newStartTime);
+            toShift.sort((a,b)=>a.startTime - b.startTime);
+            toShift.forEach(c => updateClipPosition(c.id, targetTrack, c.startTime + clip.duration));
+            addClipToTimeline(clip, targetTrack);
+          } else {
+            // overwrite: remove overlapped clips
+            const start = newStartTime;
+            const end = start + clip.duration;
+            const overlapped = timelineClips[targetTrack].filter(c => (c.startTime < end && (c.startTime + c.duration) > start));
+            overlapped.forEach(c => removeClip(c.id, targetTrack));
+            addClipToTimeline(clip, targetTrack);
+          }
         }
       }
     } catch (err) {
@@ -135,6 +175,50 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
     const widthPx = clip.duration * pps;
     const leftPx = clip.startTime * pps;
     const maxNameWidth = widthPx - 8; // Padding
+    const isSelected = selectedClipIds.has(clip.id);
+
+    const onSelectClip = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setSelectedClipIds(prev => {
+        const next = new Set(prev);
+        if (e.shiftKey) {
+          next.add(clip.id);
+        } else {
+          next.clear();
+          next.add(clip.id);
+        }
+        return next;
+      });
+    };
+
+    const startTrim = (edge: 'left'|'right') => (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const startX = e.clientX;
+      const orig = { startTime: clip.startTime, inPoint: clip.inPoint, duration: clip.duration };
+      const minDur = 0.1;
+      const onMove = (ev: MouseEvent) => {
+        const dx = (ev.clientX - startX) / Math.max(1, pps);
+        if (edge === 'left') {
+          let newStartTime = Math.max(0, orig.startTime + dx);
+          let newDuration = Math.max(minDur, orig.duration - dx);
+          const delta = newStartTime - orig.startTime;
+          const newInPoint = Math.max(0, orig.inPoint + delta);
+          const newOutPoint = newInPoint + newDuration;
+          updateClip(clip.id, trackKey, { startTime: newStartTime, inPoint: newInPoint, duration: newDuration, outPoint: newOutPoint });
+        } else {
+          let newDuration = Math.max(minDur, orig.duration + dx);
+          const newOutPoint = orig.inPoint + newDuration;
+          updateClip(clip.id, trackKey, { duration: newDuration, outPoint: newOutPoint });
+        }
+      };
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    };
+    
 
     if (trackType === 'video') {
       return (
@@ -143,9 +227,13 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
           draggable
           onDragStart={(e) => handleClipDragStart(e, clip.id, trackKey, clip.startTime)}
           onDragEnd={handleClipDragEnd}
-          className="absolute top-1 bottom-1 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-move"
+          onMouseDown={onSelectClip}
+          data-clip-id={clip.id}
+          className={`absolute top-1 bottom-1 ${isSelected ? 'ring-2 ring-primary border-primary' : ''} bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-move`}
           style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
         >
+          <div onMouseDown={startTrim('left')} data-handle="left" className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/10 hover:bg-white/30 cursor-col-resize rounded-l" />
+          <div onMouseDown={startTrim('right')} data-handle="right" className="absolute right-0 top-0 bottom-0 w-1.5 bg-white/10 hover:bg-white/30 cursor-col-resize rounded-r" />
           {clip.thumbnail && (
             <img 
               src={clip.thumbnail} 
@@ -170,9 +258,13 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
           draggable
           onDragStart={(e) => handleClipDragStart(e, clip.id, trackKey, clip.startTime)}
           onDragEnd={handleClipDragEnd}
-          className="absolute top-1 bottom-1 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-move"
+          onMouseDown={onSelectClip}
+          data-clip-id={clip.id}
+          className={`absolute top-1 bottom-1 ${isSelected ? 'ring-2 ring-primary border-primary' : ''} bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-move`}
           style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
         >
+          <div onMouseDown={startTrim('left')} data-handle="left" className="absolute left-0 top-0 bottom-0 w-1.5 bg-white/10 hover:bg-white/30 cursor-col-resize rounded-l" />
+          <div onMouseDown={startTrim('right')} data-handle="right" className="absolute right-0 top-0 bottom-0 w-1.5 bg-white/10 hover:bg-white/30 cursor-col-resize rounded-r" />
           <span className="text-white text-[10px] font-semibold mb-0.5 truncate" style={{ maxWidth: `${maxNameWidth}px` }}>
             {clip.name}
           </span>
@@ -197,8 +289,10 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
   const minZoom = -2;
   const maxZoom = 6;
   const [totalSeconds, setTotalSeconds] = useState(300); // dynamic timeline duration
+  const [snappingOn, setSnappingOn] = useState(true);
   const pixelsPerSecond = useMemo(() => 20 * Math.pow(2, zoom), [zoom]);
   const contentWidth = useMemo(() => totalSeconds * pixelsPerSecond, [totalSeconds, pixelsPerSecond]);
+  const frameDuration = 1 / 30;
 
   // Horizontal viewport + scroll sync
   const rulerRef = useRef<HTMLDivElement | null>(null);
@@ -238,6 +332,69 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
     setScrollX((e.currentTarget as HTMLDivElement).scrollLeft);
   };
   const playheadLeft = currentTime * pixelsPerSecond;
+  // Playhead dragging on the ruler with autoscroll and snapping
+  const isDraggingPlayheadRef = useRef(false);
+  const dragFrameReqRef = useRef<number | null>(null);
+  useEffect(() => {
+    const onMove = (ev: MouseEvent) => {
+      if (!isDraggingPlayheadRef.current) return;
+      const ruler = rulerRef.current;
+      if (!ruler) return;
+      const rect = ruler.getBoundingClientRect();
+      // compute x within ruler content taking horizontal scroll into account
+      let x = ev.clientX - rect.left + scrollX;
+      x = Math.max(0, Math.min(contentWidth, x));
+      let seconds = x / Math.max(1, pixelsPerSecond);
+      // snapping to clip edges and major ticks
+      if (snappingOn) {
+        const snapPxThreshold = 8;
+        const snapPointsSec: number[] = [];
+        // major ticks
+        snapPointsSec.push(...majorTicks);
+        // clip edges across all tracks
+        const addEdges = (clips: TimelineClip[]) => {
+          clips.forEach(c => {
+            snapPointsSec.push(c.startTime);
+            snapPointsSec.push(c.startTime + Math.max(0, c.duration));
+          });
+        };
+        addEdges(timelineClips.v1);
+        addEdges(timelineClips.v2);
+        addEdges(timelineClips.a1);
+        addEdges(timelineClips.a2);
+        const xPx = seconds * pixelsPerSecond;
+        let best = seconds;
+        let bestDist = snapPxThreshold + 1;
+        for (const s of snapPointsSec) {
+          const px = s * pixelsPerSecond;
+          const d = Math.abs(px - xPx);
+          if (d < bestDist) { bestDist = d; best = s; }
+        }
+        if (bestDist <= snapPxThreshold) seconds = best;
+      }
+      // autoscroll when near edges
+      const edgePx = 24;
+      if (ruler) {
+        const localX = ev.clientX - rect.left;
+        if (localX < edgePx) setScrollX(x => Math.max(0, x - 20));
+        else if (localX > rect.width - edgePx) setScrollX(x => Math.min(contentWidth, x + 20));
+      }
+      // throttle updates with rAF
+      if (dragFrameReqRef.current) cancelAnimationFrame(dragFrameReqRef.current);
+      dragFrameReqRef.current = requestAnimationFrame(() => {
+        setCurrentTime(Math.max(0, Math.min(totalSeconds, seconds)));
+        dragFrameReqRef.current = null;
+      });
+    };
+    const onUp = () => { isDraggingPlayheadRef.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      if (dragFrameReqRef.current) cancelAnimationFrame(dragFrameReqRef.current);
+    };
+  }, [pixelsPerSecond, contentWidth, setCurrentTime, totalSeconds, snappingOn, timelineClips, scrollX]);
 
   // Vertical viewport + scroll sync for tracks
   const tracksRef = useRef<HTMLDivElement | null>(null);
@@ -341,8 +498,140 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
     return hh > 0 ? `${pad(hh)}:${pad(mm)}:${pad(ss)}` : `${pad(mm)}:${pad(ss)}`;
   };
 
+  // Keyboard controls: snapping toggle, transport, playhead nudge
+  // Keyboard controls: snapping toggle, transport, playhead nudge, delete, link toggle, help
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement | null)?.isContentEditable) return;
+      const key = e.key;
+      if (key === 's' || key === 'S') {
+        e.preventDefault();
+        setSnappingOn(v => !v);
+        return;
+      }
+      if (key === ' '){
+        e.preventDefault();
+        setIsPlaying(!isPlaying);
+        return;
+      }
+      if (key === 'ArrowLeft' || key === 'ArrowRight'){
+        e.preventDefault();
+        const delta = (e.shiftKey ? 10 : 1) * frameDuration * (key === 'ArrowLeft' ? -1 : 1);
+        const next = Math.max(0, Math.min(totalSeconds, currentTime + delta));
+        setCurrentTime(next);
+        return;
+      }
+      if (key === ',') {
+        e.preventDefault();
+        setDropMode('insert');
+        return;
+      }
+      if (key === '.') {
+        e.preventDefault();
+        setDropMode('overwrite');
+        return;
+      }
+      if (key === 'ArrowUp' || key === 'ArrowDown') {
+        e.preventDefault();
+        const edges: number[] = [];
+        const addEdges = (clips: TimelineClip[]) => clips.forEach(c => { edges.push(c.startTime); edges.push(c.startTime + c.duration); });
+        addEdges(timelineClips.v1); addEdges(timelineClips.v2); addEdges(timelineClips.a1); addEdges(timelineClips.a2);
+        const now = currentTime;
+        if (key === 'ArrowUp') {
+          const prevs = edges.filter(t => t < now).sort((a,b)=>b-a);
+          if (prevs[0] != null) setCurrentTime(prevs[0]);
+        } else {
+          const nexts = edges.filter(t => t > now).sort((a,b)=>a-b);
+          if (nexts[0] != null) setCurrentTime(nexts[0]);
+        }
+        return;
+      }
+      if (key === 'q' || key === 'Q') {
+        e.preventDefault();
+        // Trim start to playhead (non-ripple version)
+        (['v1','v2','a1','a2'] as TrackKey[]).forEach(track => {
+          timelineClips[track].forEach(c => {
+            if (!selectedClipIds.has(c.id)) return;
+            const start = c.startTime;
+            const end = c.startTime + c.duration;
+            const t = currentTime;
+            if (t > start && t < end) {
+              const delta = t - start;
+              const newIn = c.inPoint + delta;
+              const newDur = Math.max(0.1, c.duration - delta);
+              updateClip(c.id, track, { inPoint: newIn, duration: newDur, outPoint: newIn + newDur });
+            }
+          });
+        });
+        return;
+      }
+      if (key === 'w' || key === 'W') {
+        e.preventDefault();
+        // Trim end to playhead (non-ripple version)
+        (['v1','v2','a1','a2'] as TrackKey[]).forEach(track => {
+          timelineClips[track].forEach(c => {
+            if (!selectedClipIds.has(c.id)) return;
+            const start = c.startTime;
+            const end = c.startTime + c.duration;
+            const t = currentTime;
+            if (t > start && t < end) {
+              const newDur = Math.max(0.1, t - start);
+              updateClip(c.id, track, { duration: newDur, outPoint: c.inPoint + newDur });
+            }
+          });
+        });
+        return;
+      }
+      if (key === 'Delete') {
+        e.preventDefault();
+        const tracks: TrackKey[] = ['v1','v2','a1','a2'];
+        if (e.shiftKey) {
+          // Ripple delete: remove and close gaps per track
+          tracks.forEach(track => {
+            const clips = [...timelineClips[track]].sort((a,b)=>a.startTime-b.startTime);
+            const selected = clips.filter(c => selectedClipIds.has(c.id));
+            selected.forEach(sel => {
+              const end = sel.startTime + sel.duration;
+              const dur = sel.duration;
+              removeClip(sel.id, track);
+              clips
+                .filter(c => !selectedClipIds.has(c.id) && c.startTime >= end)
+                .forEach(c => updateClipPosition(c.id, track, Math.max(0, c.startTime - dur)));
+            });
+          });
+        } else {
+          // Lift delete: remove only
+          const tracks: TrackKey[] = ['v1','v2','a1','a2'];
+          tracks.forEach(track => {
+            timelineClips[track].forEach(c => { if (selectedClipIds.has(c.id)) removeClip(c.id, track); });
+          });
+        }
+        setSelectedClipIds(new Set());
+        return;
+      }
+      if ((key === 'l' || key === 'L') && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        // Toggle link for all selected mediaIds
+        const mediaIds = new Set<string>();
+        (['v1','v2','a1','a2'] as TrackKey[]).forEach(track => {
+          timelineClips[track].forEach(c => { if (selectedClipIds.has(c.id)) mediaIds.add(c.mediaId); });
+        });
+        mediaIds.forEach(id => toggleLinkForMedia(id));
+        return;
+      }
+      if (key === '?') {
+        e.preventDefault();
+        setShowHelp(v => !v);
+        return;
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isPlaying, setIsPlaying, setCurrentTime, totalSeconds, currentTime, timelineClips, selectedClipIds]);
+
   return (
-  <div className="h-full min-h-[16rem] bg-timeline-bg border-t border-primary/20 flex">
+  <div className="h-full min-h-[16rem] bg-timeline-bg border-t border-primary/20 flex overflow-x-hidden">
     <div className="flex-1 min-w-0 flex flex-col">
           {/* Timeline header row with timecode readout */}
           <div className="h-10 bg-panel-medium border-b border-border flex items-center justify-between px-3">
@@ -355,7 +644,19 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
         {/* Ruler with sticky left gutter */}
         <div className="h-8 bg-panel-dark border-b border-timeline-yellow/20 flex">
           <div className="w-20 border-r border-border/50 bg-panel-dark sticky left-0 z-10" />
-          <div ref={rulerRef} onScroll={onRulerScroll} className="relative flex-1 overflow-x-auto timeline-scrollbar">
+          <div 
+            ref={rulerRef}
+            onScroll={onRulerScroll}
+            onMouseDown={(e)=>{
+              // start dragging playhead anywhere on ruler
+              isDraggingPlayheadRef.current = true;
+              const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+              const x = e.clientX - rect.left + scrollX;
+              const secs = Math.max(0, Math.min(totalSeconds, x / Math.max(1, pixelsPerSecond)));
+              setCurrentTime(secs);
+            }}
+            className="relative flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-col-resize"
+          >
             <div className="relative" style={{ width: `${contentWidth}px` }}>
               {/* Ticks */}
               <div className="absolute inset-0">
@@ -384,7 +685,7 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
           </div>
         </div>
 
-        {/* Horizontal Zoom + Pan Scrollbar directly below the ruler */}
+        {/* Horizontal Zoom + Pan Scrollbar */}
         <TimelineZoomScrollbar
           totalSeconds={totalSeconds}
           zoom={zoom}
@@ -402,10 +703,10 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
           className="border-t-timeline-yellow/30"
         />
 
-        {/* Tracks area + Vertical zoom bar container (early version) */}
+  {/* Tracks area + Vertical zoom bar container (early version) */}
         <div className="flex-1 min-h-0 flex">
           {/* Tracks area: each row shares horizontal scroll; left controls sticky */}
-          <div ref={tracksRef} onScroll={onTracksScroll} className="flex-1 overflow-y-auto tracks-scrollbar">
+          <div ref={tracksRef} onScroll={onTracksScroll} className="flex-1 overflow-y-auto overflow-x-hidden tracks-scrollbar">
           {/* Video Track 2 */}
           <div className="h-16 bg-timeline-track border-b border-border/50 border-l-2 border-l-primary/20 flex items-center hover:bg-timeline-track/80 transition-colors">
             <div className="w-20 flex flex-col items-center justify-center gap-1 border-r border-border px-1.5 py-1 sticky left-0 z-50 bg-timeline-track">
@@ -436,7 +737,10 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
               </div>
             </div>
             <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('v2')}>
-              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
+              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }} onMouseDown={(e)=>{
+                const target = e.target as HTMLElement;
+                if (!target.closest('[data-clip-id]')) setSelectedClipIds(new Set());
+              }}>
                 {/* Grid lines (snapping guides) */}
                 {majorTicks.map((sec) => (
                   <div key={sec} className="absolute top-0 bottom-0 w-px bg-timeline-yellow/10" style={{ left: sec * pixelsPerSecond }} />
@@ -482,7 +786,10 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
               </div>
             </div>
             <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('v1')}>
-              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
+              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }} onMouseDown={(e)=>{
+                const target = e.target as HTMLElement;
+                if (!target.closest('[data-clip-id]')) setSelectedClipIds(new Set());
+              }}>
                 {/* Grid lines */}
                 {majorTicks.map((sec) => (
                   <div key={sec} className="absolute top-0 bottom-0 w-px bg-timeline-yellow/10" style={{ left: sec * pixelsPerSecond }} />
@@ -529,7 +836,10 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
               </div>
             </div>
             <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('a1')}>
-              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
+              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }} onMouseDown={(e)=>{
+                const target = e.target as HTMLElement;
+                if (!target.closest('[data-clip-id]')) setSelectedClipIds(new Set());
+              }}>
                 {/* Fake waveform grid + playhead */}
                 {majorTicks.map((sec) => (
                   <div key={sec} className="absolute top-0 bottom-0 w-px bg-timeline-yellow/10" style={{ left: sec * pixelsPerSecond }} />
@@ -572,7 +882,10 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
               </div>
             </div>
             <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('a2')}>
-              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
+              <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }} onMouseDown={(e)=>{
+                const target = e.target as HTMLElement;
+                if (!target.closest('[data-clip-id]')) setSelectedClipIds(new Set());
+              }}>
                 {majorTicks.map((sec) => (
                   <div key={sec} className="absolute top-0 bottom-0 w-px bg-timeline-yellow/10" style={{ left: sec * pixelsPerSecond }} />
                 ))}
@@ -602,6 +915,31 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
       </div>
       <div className="text-[9px] text-muted-foreground mt-1">-12 dB</div>
     </div>
+
+    {/* Help overlay */}
+    {showHelp && (
+      <div className="fixed inset-0 bg-black/60 z-[1000]" onClick={()=>setShowHelp(false)}>
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[28rem] max-w-[90vw] bg-panel-dark border border-border rounded-lg shadow-xl p-4 text-sm text-foreground">
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-semibold">Shortcuts</div>
+            <div className="text-xs text-muted-foreground">Press ? to close</div>
+          </div>
+          <ul className="grid grid-cols-2 gap-y-1 gap-x-4">
+            <li><span className="text-muted-foreground">Play/Pause</span> <span className="float-right">Space</span></li>
+            <li><span className="text-muted-foreground">Toggle snapping</span> <span className="float-right">S</span></li>
+            <li><span className="text-muted-foreground">Insert mode</span> <span className="float-right">,</span></li>
+            <li><span className="text-muted-foreground">Overwrite mode</span> <span className="float-right">.</span></li>
+            <li><span className="text-muted-foreground">Nudge frame</span> <span className="float-right">←/→</span></li>
+            <li><span className="text-muted-foreground">Nudge coarse</span> <span className="float-right">Shift + ←/→</span></li>
+            <li><span className="text-muted-foreground">Prev/Next edit</span> <span className="float-right">↑/↓</span></li>
+            <li><span className="text-muted-foreground">Lift delete</span> <span className="float-right">Delete</span></li>
+            <li><span className="text-muted-foreground">Ripple delete</span> <span className="float-right">Shift + Delete</span></li>
+            <li><span className="text-muted-foreground">Toggle A/V link</span> <span className="float-right">Cmd/Ctrl + L</span></li>
+          </ul>
+          <div className="mt-3 text-xs text-muted-foreground">Tip: Current drop mode is <span className="text-primary font-semibold">{dropMode}</span>. Use , and . to switch. Ripple trim via Shift-drag on trim handles is coming soon.</div>
+        </div>
+      </div>
+    )}
   </div>
   );
 };

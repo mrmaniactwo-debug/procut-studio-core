@@ -15,25 +15,8 @@ const PlaybackContext = createContext<PlaybackContextType | undefined>(undefined
 export const PlaybackProvider = ({ children }: { children: ReactNode }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(30); // Default 30 seconds
+  const [duration, setDuration] = useState(300); // Default 300 seconds (5 min)
   const playheadRef = useRef<HTMLVideoElement | null>(null);
-
-  // Auto-increment currentTime when playing
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const interval = setInterval(() => {
-      setCurrentTime((prev) => {
-        if (prev >= duration) {
-          setIsPlaying(false);
-          return duration;
-        }
-        return prev + 0.033; // ~30fps
-      });
-    }, 33);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, duration]);
 
   return (
     <PlaybackContext.Provider

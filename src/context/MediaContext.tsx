@@ -38,6 +38,11 @@ interface MediaContextType {
   addClipToTimeline: (clip: TimelineClip, track: 'v1' | 'v2' | 'a1' | 'a2') => void;
   updateClipPosition: (clipId: string, track: 'v1' | 'v2' | 'a1' | 'a2', newStartTime: number) => void;
   moveClip: (clipId: string, fromTrack: 'v1' | 'v2' | 'a1' | 'a2', toTrack: 'v1' | 'v2' | 'a1' | 'a2', newStartTime: number) => void;
+  updateClip: (clipId: string, track: 'v1'|'v2'|'a1'|'a2', changes: Partial<TimelineClip>) => void;
+  removeClip: (clipId: string, track: 'v1'|'v2'|'a1'|'a2') => void;
+  // Linking
+  isLinked: (mediaId: string) => boolean;
+  toggleLinkForMedia: (mediaId: string) => void;
 }
 
 const MediaContext = createContext<MediaContextType | undefined>(undefined);
@@ -56,6 +61,17 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
     a1: [],
     a2: [],
   });
+  // mediaIds that are unlinked (A/V can move independently)
+  const [unlinkedMediaIds, setUnlinkedMediaIds] = useState<Set<string>>(new Set());
+
+  const isLinked = (mediaId: string) => !unlinkedMediaIds.has(mediaId);
+  const toggleLinkForMedia = (mediaId: string) => {
+    setUnlinkedMediaIds(prev => {
+      const next = new Set(prev);
+      if (next.has(mediaId)) next.delete(mediaId); else next.add(mediaId);
+      return next;
+    });
+  };
 
   const addClipToTimeline = (clip: TimelineClip, track: 'v1' | 'v2' | 'a1' | 'a2') => {
     setTimelineClips((prev) => ({
@@ -64,30 +80,58 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const updateClipPosition = (clipId: string, track: 'v1' | 'v2' | 'a1' | 'a2', newStartTime: number) => {
-    setTimelineClips((prev) => ({
+  const updateClip: MediaContextType['updateClip'] = (clipId, track, changes) => {
+    setTimelineClips(prev => ({
       ...prev,
-      [track]: prev[track].map((clip) =>
-        clip.id === clipId ? { ...clip, startTime: newStartTime } : clip
-      ),
+      [track]: prev[track].map(c => c.id === clipId ? { ...c, ...changes } : c)
     }));
+  };
+
+  const removeClip: MediaContextType['removeClip'] = (clipId, track) => {
+    setTimelineClips(prev => ({
+      ...prev,
+      [track]: prev[track].filter(c => c.id !== clipId)
+    }));
+  };
+
+  const updateClipPosition = (clipId: string, track: 'v1' | 'v2' | 'a1' | 'a2', newStartTime: number) => {
+    setTimelineClips((prev) => {
+      const currentClips = prev[track];
+      const moving = currentClips.find(c => c.id === clipId);
+      if (!moving) return prev;
+      const delta = newStartTime - moving.startTime;
+      const next: typeof prev = { ...prev };
+      next[track] = currentClips.map(c => c.id === clipId ? { ...c, startTime: newStartTime } : c);
+      // Move linked counterparts by same delta
+      if (isLinked(moving.mediaId)) {
+        const isVideo = track === 'v1' || track === 'v2';
+        const counterpartTracks: Array<'v1'|'v2'|'a1'|'a2'> = isVideo ? ['a1','a2'] : ['v1','v2'];
+        counterpartTracks.forEach(tk => {
+          next[tk] = next[tk].map(c => c.mediaId === moving.mediaId ? { ...c, startTime: Math.max(0, c.startTime + delta) } : c);
+        });
+      }
+      return next;
+    });
   };
 
   const moveClip: MediaContextType['moveClip'] = (clipId, fromTrack, toTrack, newStartTime) => {
     setTimelineClips((prev) => {
-      // Find the clip in fromTrack
-      const clip = prev[fromTrack].find((c) => c.id === clipId);
-      if (!clip) return prev; // nothing to move
-      // Remove from source track
-      const nextFrom = prev[fromTrack].filter((c) => c.id !== clipId);
-      // Insert (or replace existing) in target track with updated startTime
-      const moved: TimelineClip = { ...clip, startTime: newStartTime };
-      const nextTo = [...prev[toTrack], moved];
-      return {
-        ...prev,
-        [fromTrack]: nextFrom,
-        [toTrack]: nextTo,
-      };
+      const srcList = prev[fromTrack];
+      const clip = srcList.find(c => c.id === clipId);
+      if (!clip) return prev;
+      const delta = newStartTime - clip.startTime;
+      const next: typeof prev = { ...prev };
+      next[fromTrack] = srcList.filter(c => c.id !== clipId);
+      next[toTrack] = [...prev[toTrack], { ...clip, startTime: newStartTime }];
+      // Move linked counterparts on their tracks by same delta
+      if (isLinked(clip.mediaId)) {
+        const isVideo = fromTrack === 'v1' || fromTrack === 'v2' || toTrack === 'v1' || toTrack === 'v2';
+        const counterpartTracks: Array<'v1'|'v2'|'a1'|'a2'> = isVideo ? ['a1','a2'] : ['v1','v2'];
+        counterpartTracks.forEach(tk => {
+          next[tk] = next[tk].map(c => c.mediaId === clip.mediaId ? { ...c, startTime: Math.max(0, c.startTime + delta) } : c);
+        });
+      }
+      return next;
     });
   };
 
@@ -100,8 +144,12 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
         setSelectedMedia,
         timelineClips,
         addClipToTimeline,
+        updateClip,
         updateClipPosition,
         moveClip,
+        removeClip,
+        isLinked,
+        toggleLinkForMedia,
       }}
     >
       {children}

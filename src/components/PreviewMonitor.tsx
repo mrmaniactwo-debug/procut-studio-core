@@ -34,60 +34,102 @@ export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
 
   const activeClip = getActiveClip();
 
-  // Load and render the active clip
+  // Load video file when active clip changes
   useEffect(() => {
-    if (!activeClip || !activeClip.file || !videoRef.current || !canvasRef.current) return;
+    if (!activeClip || !activeClip.file || !videoRef.current) return;
 
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Load video file
     const url = URL.createObjectURL(activeClip.file);
     video.src = url;
 
-    const updateCanvas = () => {
-      if (video.readyState >= 2) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      }
-    };
-
-    // Calculate the time within the clip (accounting for in/out points)
-    const timeInClip = (currentTime - activeClip.startTime) + activeClip.inPoint;
-    
     video.onloadedmetadata = () => {
+      // Set initial time
+      const timeInClip = Math.max(0, (currentTime - activeClip.startTime) + activeClip.inPoint);
       video.currentTime = Math.max(0, Math.min(timeInClip, video.duration));
-      updateCanvas();
     };
-
-    video.onseeked = updateCanvas;
-
-    if (isPlaying && video.paused) {
-      video.play().catch(() => {});
-    } else if (!isPlaying && !video.paused) {
-      video.pause();
-    }
 
     return () => {
       URL.revokeObjectURL(url);
       video.src = '';
     };
-  }, [activeClip, currentTime, isPlaying]);
+  }, [activeClip]);
 
-  // Update video current time as playback progresses
+  // Handle play/pause state
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !activeClip) return;
+
+    if (isPlaying) {
+      video.play().catch(console.error);
+    } else {
+      video.pause();
+    }
+  }, [isPlaying, activeClip]);
+
+  // Update video current time when seeking
   useEffect(() => {
     if (!activeClip || !videoRef.current) return;
     
     const video = videoRef.current;
     const timeInClip = (currentTime - activeClip.startTime) + activeClip.inPoint;
+    const clampedTime = Math.max(0, Math.min(timeInClip, video.duration || 0));
     
-    if (Math.abs(video.currentTime - timeInClip) > 0.1) {
-      video.currentTime = Math.max(0, Math.min(timeInClip, video.duration));
+    // Only update if there's a significant difference (avoid feedback loop)
+    if (Math.abs(video.currentTime - clampedTime) > 0.1) {
+      video.currentTime = clampedTime;
     }
   }, [currentTime, activeClip]);
+
+  // Sync playback context time with video element time
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !activeClip) return;
+
+    const handleTimeUpdate = () => {
+      if (!isPlaying || !activeClip) return;
+      
+      // Convert video time back to timeline time
+      const timelineTime = (video.currentTime - activeClip.inPoint) + activeClip.startTime;
+      
+      // Only update if we're still within this clip
+      if (timelineTime >= activeClip.startTime && timelineTime < activeClip.startTime + activeClip.duration) {
+        setCurrentTime(timelineTime);
+      } else if (timelineTime >= activeClip.startTime + activeClip.duration) {
+        // Reached end of clip
+        setIsPlaying(false);
+      }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
+  }, [activeClip, isPlaying, setCurrentTime, setIsPlaying]);
+
+  // Render video to canvas
+  useEffect(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !activeClip) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId: number;
+
+    const renderFrame = () => {
+      if (video.readyState >= 2) {
+        canvas.width = video.videoWidth || 1920;
+        canvas.height = video.videoHeight || 1080;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      }
+      animationId = requestAnimationFrame(renderFrame);
+    };
+
+    renderFrame();
+
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId);
+    };
+  }, [activeClip]);
 
   const formatTimecode = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);

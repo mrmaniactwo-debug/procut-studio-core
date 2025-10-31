@@ -19,6 +19,30 @@
 
   <body>
     <div id="root"></div>
+    
+    <!-- Suppress WebSocket compression errors from browser extensions -->
+    <script>
+      if (import.meta.env.DEV) {
+        const originalWebSocket = window.WebSocket;
+        window.WebSocket = function(...args) {
+          const ws = new originalWebSocket(...args);
+          const originalClose = ws.close;
+          ws.addEventListener('error', (e) => {
+            console.warn('WebSocket error suppressed (browser extension interference)', e);
+            e.stopImmediatePropagation();
+          });
+          ws.close = function(...closeArgs) {
+            try {
+              return originalClose.apply(this, closeArgs);
+            } catch (err) {
+              console.warn('WebSocket close error suppressed', err);
+            }
+          };
+          return ws;
+        };
+      }
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
