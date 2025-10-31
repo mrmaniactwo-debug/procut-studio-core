@@ -22,6 +22,7 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
   });
   type TrackKey = 'v1' | 'v2' | 'a1' | 'a2';
   const [draggingClip, setDraggingClip] = useState<{id: string; track: TrackKey; offsetX: number} | null>(null);
+  const dragImageRef = useRef<HTMLElement | null>(null);
 
   const formatTimecode = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -35,6 +36,48 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     setDraggingClip({ id: clipId, track, offsetX });
+
+    // Provide a nicer drag ghost using a cloned element
+    try {
+      const el = e.currentTarget as HTMLElement;
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.style.position = 'absolute';
+      clone.style.top = '-10000px';
+      clone.style.left = '-10000px';
+      clone.style.pointerEvents = 'none';
+      clone.style.opacity = '0.9';
+      clone.style.transform = 'scale(0.98)';
+      document.body.appendChild(clone);
+      dragImageRef.current = clone;
+      // Use cursor offset within the clip for natural drag
+      e.dataTransfer.setDragImage(clone, Math.max(0, Math.min(offsetX, el.clientWidth)), 12);
+    } catch (err) {
+      console.warn('Failed to set drag image', err);
+    }
+  };
+
+  const handleClipDragEnd = () => {
+    if (dragImageRef.current) {
+      dragImageRef.current.remove();
+      dragImageRef.current = null;
+    }
+    setDraggingClip(null);
+  };
+
+  // Time snapping helper (Alt disables snapping)
+  const snapTime = (seconds: number, altKey: boolean) => {
+    if (altKey) return Math.max(0, seconds);
+    const pps = pixelsPerSecond;
+    let interval = 1; // default 1s
+    if (pps >= 160) interval = 0.25;
+    else if (pps >= 80) interval = 0.5;
+    else if (pps >= 40) interval = 1;
+    else if (pps >= 20) interval = 2;
+    else if (pps >= 10) interval = 5;
+    else if (pps >= 5) interval = 10;
+    else interval = 30;
+    const snapped = Math.round(seconds / interval) * interval;
+    return Math.max(0, snapped);
   };
 
   const handleTrackDrop = (targetTrack: TrackKey) => (e: React.DragEvent<HTMLDivElement>) => {
@@ -42,7 +85,8 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     // account for horizontal scroll offset
-    const newStartTime = Math.max(0, (x + scrollX - (draggingClip ? draggingClip.offsetX : 0)) / Math.max(1, pixelsPerSecond));
+    const rawStartTime = Math.max(0, (x + scrollX - (draggingClip ? draggingClip.offsetX : 0)) / Math.max(1, pixelsPerSecond));
+    const newStartTime = snapTime(rawStartTime, e.altKey);
 
     // Case 1: internal drag of an existing timeline clip
     if (draggingClip) {
@@ -52,7 +96,7 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
         // move across tracks
         moveClip(draggingClip.id, draggingClip.track, targetTrack, newStartTime);
       }
-      setDraggingClip(null);
+      handleClipDragEnd();
       return;
     }
 
@@ -76,12 +120,15 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
             outPoint: Math.max(0, file.durationSeconds ?? 0),
             startTime: newStartTime,
             thumbnail: file.thumbnail,
-            file: (file as any).file,
+            file: file.file,
           };
           addClipToTimeline(clip, targetTrack);
         }
       }
-    } catch {}
+    } catch (err) {
+      // If parsing or data transfer fails, log for debugging but don't crash the drop handler
+      console.warn('Failed to handle drop data', err);
+    }
   };
 
   const renderClip = (clip: TimelineClip, trackType: 'video' | 'audio', trackKey: TrackKey, pps: number) => {
@@ -95,6 +142,7 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
           key={clip.id}
           draggable
           onDragStart={(e) => handleClipDragStart(e, clip.id, trackKey, clip.startTime)}
+          onDragEnd={handleClipDragEnd}
           className="absolute top-1 bottom-1 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-move"
           style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
         >
@@ -121,6 +169,7 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
           key={clip.id}
           draggable
           onDragStart={(e) => handleClipDragStart(e, clip.id, trackKey, clip.startTime)}
+          onDragEnd={handleClipDragEnd}
           className="absolute top-1 bottom-1 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-move"
           style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
         >
@@ -536,30 +585,7 @@ export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
           </div>
           </div>
 
-          {/* Vertical Scroll-Zoom Bar (panning only) on the right */}
-          <div className="w-6 mr-4 border-l border-border/50 bg-panel-dark/60">
-            <TimelineZoomScrollbar
-              totalSeconds={totalSeconds}
-              zoom={zoom}
-              minZoom={minZoom}
-              maxZoom={maxZoom}
-              onZoomChange={setZoom}
-              scrollX={scrollX}
-              onScrollXChange={setScrollX}
-              viewportWidth={viewportWidth}
-              orientation="vertical"
-              size="small"
-              hideTrack={false}
-              hideHandles={true}
-              scaleDown={false}
-              detached
-              tone="neutral"
-              contentHeight={tracksContentHeight}
-              viewportHeight={tracksViewportHeight}
-              scrollY={tracksScrollY}
-              onScrollYChange={setTracksScrollYProgrammatic}
-            />
-          </div>
+          {/* Native vertical scrollbar only (custom vertical bar removed) */}
         </div>
       </div>
     </div>

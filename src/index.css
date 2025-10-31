@@ -143,19 +143,20 @@ All colors MUST be HSL.
     color: hsl(var(--foreground));
   }
 
-  /* Hide vertical scrollbar in tracks list while keeping scroll functionality (custom vertical bar used) */
+  /* Show native vertical scrollbar for tracks now that custom bar is removed */
   .tracks-scrollbar {
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: auto; /* Firefox */
     overscroll-behavior: contain; /* keep scroll gestures local */
   }
   .tracks-scrollbar::-webkit-scrollbar {
-    width: 0px; /* Chrome/Safari/Edge */
-    height: 0px;
+    width: 10px; /* Chrome/Safari/Edge */
+    height: 10px;
     background: transparent;
   }
-  .tracks-scrollbar::-webkit-scrollbar-thumb,
-  .tracks-scrollbar::-webkit-scrollbar-track,
-  .tracks-scrollbar::-webkit-scrollbar-corner {
-    background: transparent;
+  .tracks-scrollbar::-webkit-scrollbar-thumb {
+    background: hsla(var(--border) / 0.6);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 }

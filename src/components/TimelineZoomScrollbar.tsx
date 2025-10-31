@@ -174,7 +174,7 @@ export const TimelineZoomScrollbar: React.FC<TimelineZoomScrollbarProps> = ({
 
     if (orientation === "vertical") {
       // Simpler, stable behavior: do not recenter on click; only start drag from current handle position
-      dragRef.current = { kind: "center", startX: e.clientY, startLeft: handleTop } as any;
+      dragRef.current = { kind: "center", startX: e.clientY, startLeft: handleTop };
       return;
     }
 
