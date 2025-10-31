@@ -1,21 +1,110 @@
-import { Play, SkipBack, SkipForward, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, ZoomIn, ZoomOut, Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TimecodePair } from "@/components/Timecode";
 import { TimelineZoomScrollbar } from "@/components/TimelineZoomScrollbar";
+import { useMedia } from "@/context/MediaContext";
+import { usePlayback } from "@/context/PlaybackContext";
 
-type TimelineProps = {
-  onResetLayout?: () => void;
-};
-
-export const Timeline = ({ onResetLayout }: TimelineProps) => {
+export const Timeline = () => {
+  const { timelineClips, updateClipPosition } = useMedia();
+  const { isPlaying, currentTime, duration, setIsPlaying, setCurrentTime } = usePlayback();
   const [trackStates, setTrackStates] = useState({
     v1: { visible: true, locked: false, muted: false },
     a1: { visible: true, locked: false, muted: false },
     v2: { visible: true, locked: false, muted: false },
     a2: { visible: true, locked: false, muted: false },
   });
+  const [draggingClip, setDraggingClip] = useState<{id: string; track: string; offsetX: number} | null>(null);
+
+  // Convert seconds to pixels (1 second = 20 pixels for now)
+  const PIXELS_PER_SECOND = 20;
+
+  const formatTimecode = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const frames = Math.floor((seconds % 1) * 30);
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}:${frames.toString().padStart(2, '0')}`;
+  };
+
+  const handleClipDragStart = (e: React.DragEvent, clipId: string, track: string, startTime: number) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    setDraggingClip({ id: clipId, track, offsetX });
+  };
+
+  const handleClipDrop = (e: React.DragEvent, targetTrack: string) => {
+    e.preventDefault();
+    if (!draggingClip) return;
+
+    // Calculate new start time based on drop position
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - draggingClip.offsetX;
+    const newStartTime = Math.max(0, x / PIXELS_PER_SECOND);
+
+    // Update clip position
+    updateClipPosition(draggingClip.id, targetTrack as any, newStartTime);
+    setDraggingClip(null);
+  };
+
+  const renderClip = (clip: any, trackType: 'video' | 'audio') => {
+    const widthPx = clip.duration * PIXELS_PER_SECOND;
+    const leftPx = clip.startTime * PIXELS_PER_SECOND;
+    const maxNameWidth = widthPx - 8; // Padding
+
+    if (trackType === 'video') {
+      return (
+        <div
+          key={clip.id}
+          draggable
+          onDragStart={(e) => handleClipDragStart(e, clip.id, 'v1', clip.startTime)}
+          className="absolute top-1 bottom-1 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-move"
+          style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
+        >
+          {clip.thumbnail && (
+            <img 
+              src={clip.thumbnail} 
+              alt={clip.name} 
+              className="absolute inset-0 w-full h-full object-cover opacity-30 rounded pointer-events-none" 
+            />
+          )}
+          <div className="relative z-10 flex items-center gap-1 max-w-full overflow-hidden">
+            <span className="text-white text-[10px] font-semibold truncate" style={{ maxWidth: `${maxNameWidth}px` }}>
+              {clip.name}
+            </span>
+          </div>
+          <div className="relative z-10 w-full h-1 bg-timeline-yellow/30 rounded-full">
+            <div className="w-1 h-1 bg-timeline-yellow rounded-full" />
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          key={clip.id}
+          draggable
+          onDragStart={(e) => handleClipDragStart(e, clip.id, 'a1', clip.startTime)}
+          className="absolute top-1 bottom-1 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-move"
+          style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
+        >
+          <span className="text-white text-[10px] font-semibold mb-0.5 truncate" style={{ maxWidth: `${maxNameWidth}px` }}>
+            {clip.name}
+          </span>
+          <div className="flex gap-0.5 h-full items-center overflow-hidden">
+            {Array.from({ length: Math.min(40, Math.floor(widthPx / 3)) }).map((_, i) => (
+              <div
+                key={i}
+                className="w-0.5 bg-clip-audio rounded-full flex-shrink-0"
+                style={{ height: `${20 + Math.random() * 60}%` }}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+  };
 
   // (Autosave status moved to Header)
 
@@ -26,7 +115,6 @@ export const Timeline = ({ onResetLayout }: TimelineProps) => {
   const [totalSeconds, setTotalSeconds] = useState(300); // dynamic timeline duration
   const pixelsPerSecond = useMemo(() => 20 * Math.pow(2, zoom), [zoom]);
   const contentWidth = useMemo(() => totalSeconds * pixelsPerSecond, [totalSeconds, pixelsPerSecond]);
-  const currentTime = 0; // TODO: wire to real playhead
 
   // Horizontal viewport + scroll sync
   const rulerRef = useRef<HTMLDivElement | null>(null);
