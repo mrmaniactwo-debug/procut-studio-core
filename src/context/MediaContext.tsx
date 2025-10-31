@@ -37,6 +37,7 @@ interface MediaContextType {
   };
   addClipToTimeline: (clip: TimelineClip, track: 'v1' | 'v2' | 'a1' | 'a2') => void;
   updateClipPosition: (clipId: string, track: 'v1' | 'v2' | 'a1' | 'a2', newStartTime: number) => void;
+  moveClip: (clipId: string, fromTrack: 'v1' | 'v2' | 'a1' | 'a2', toTrack: 'v1' | 'v2' | 'a1' | 'a2', newStartTime: number) => void;
 }
 
 const MediaContext = createContext<MediaContextType | undefined>(undefined);
@@ -72,6 +73,24 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const moveClip: MediaContextType['moveClip'] = (clipId, fromTrack, toTrack, newStartTime) => {
+    setTimelineClips((prev) => {
+      // Find the clip in fromTrack
+      const clip = prev[fromTrack].find((c) => c.id === clipId);
+      if (!clip) return prev; // nothing to move
+      // Remove from source track
+      const nextFrom = prev[fromTrack].filter((c) => c.id !== clipId);
+      // Insert (or replace existing) in target track with updated startTime
+      const moved: TimelineClip = { ...clip, startTime: newStartTime };
+      const nextTo = [...prev[toTrack], moved];
+      return {
+        ...prev,
+        [fromTrack]: nextFrom,
+        [toTrack]: nextTo,
+      };
+    });
+  };
+
   return (
     <MediaContext.Provider
       value={{
@@ -82,6 +101,7 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
         timelineClips,
         addClipToTimeline,
         updateClipPosition,
+        moveClip,
       }}
     >
       {children}

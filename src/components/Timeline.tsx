@@ -4,11 +4,15 @@ import { Slider } from "@/components/ui/slider";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TimecodePair } from "@/components/Timecode";
 import { TimelineZoomScrollbar } from "@/components/TimelineZoomScrollbar";
-import { useMedia } from "@/context/MediaContext";
+import { useMedia, TimelineClip, MediaFile } from "@/context/MediaContext";
 import { usePlayback } from "@/context/PlaybackContext";
 
-export const Timeline = () => {
-  const { timelineClips, updateClipPosition } = useMedia();
+type TimelineProps = {
+  onResetLayout?: () => void;
+};
+
+export const Timeline: React.FC<TimelineProps> = ({ onResetLayout }) => {
+  const { timelineClips, updateClipPosition, addClipToTimeline, moveClip } = useMedia();
   const { isPlaying, currentTime, duration, setIsPlaying, setCurrentTime } = usePlayback();
   const [trackStates, setTrackStates] = useState({
     v1: { visible: true, locked: false, muted: false },
@@ -16,10 +20,8 @@ export const Timeline = () => {
     v2: { visible: true, locked: false, muted: false },
     a2: { visible: true, locked: false, muted: false },
   });
-  const [draggingClip, setDraggingClip] = useState<{id: string; track: string; offsetX: number} | null>(null);
-
-  // Convert seconds to pixels (1 second = 20 pixels for now)
-  const PIXELS_PER_SECOND = 20;
+  type TrackKey = 'v1' | 'v2' | 'a1' | 'a2';
+  const [draggingClip, setDraggingClip] = useState<{id: string; track: TrackKey; offsetX: number} | null>(null);
 
   const formatTimecode = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -29,29 +31,62 @@ export const Timeline = () => {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}:${frames.toString().padStart(2, '0')}`;
   };
 
-  const handleClipDragStart = (e: React.DragEvent, clipId: string, track: string, startTime: number) => {
+  const handleClipDragStart = (e: React.DragEvent, clipId: string, track: TrackKey, startTime: number) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     setDraggingClip({ id: clipId, track, offsetX });
   };
 
-  const handleClipDrop = (e: React.DragEvent, targetTrack: string) => {
+  const handleTrackDrop = (targetTrack: TrackKey) => (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (!draggingClip) return;
-
-    // Calculate new start time based on drop position
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - draggingClip.offsetX;
-    const newStartTime = Math.max(0, x / PIXELS_PER_SECOND);
+    const x = e.clientX - rect.left;
+    // account for horizontal scroll offset
+    const newStartTime = Math.max(0, (x + scrollX - (draggingClip ? draggingClip.offsetX : 0)) / Math.max(1, pixelsPerSecond));
 
-    // Update clip position
-    updateClipPosition(draggingClip.id, targetTrack as any, newStartTime);
-    setDraggingClip(null);
+    // Case 1: internal drag of an existing timeline clip
+    if (draggingClip) {
+      if (draggingClip.track === targetTrack) {
+        updateClipPosition(draggingClip.id, targetTrack, newStartTime);
+      } else {
+        // move across tracks
+        moveClip(draggingClip.id, draggingClip.track, targetTrack, newStartTime);
+      }
+      setDraggingClip(null);
+      return;
+    }
+
+    // Case 2: external drop from MediaBrowser
+    try {
+      const json = e.dataTransfer.getData('application/json');
+      if (json) {
+        const file = JSON.parse(json) as MediaFile;
+        const isVideo = file.type?.startsWith('video');
+        const isAudio = file.type?.startsWith('audio');
+        const targetIsVideo = targetTrack === 'v1' || targetTrack === 'v2';
+        const targetIsAudio = targetTrack === 'a1' || targetTrack === 'a2';
+        if ((isVideo && targetIsVideo) || (isAudio && targetIsAudio)) {
+          const clip: TimelineClip = {
+            id: Math.random().toString(36).slice(2, 9),
+            mediaId: file.id,
+            name: file.name,
+            type: file.type,
+            duration: Math.max(0, file.durationSeconds ?? 0),
+            inPoint: 0,
+            outPoint: Math.max(0, file.durationSeconds ?? 0),
+            startTime: newStartTime,
+            thumbnail: file.thumbnail,
+            file: (file as any).file,
+          };
+          addClipToTimeline(clip, targetTrack);
+        }
+      }
+    } catch {}
   };
 
-  const renderClip = (clip: any, trackType: 'video' | 'audio') => {
-    const widthPx = clip.duration * PIXELS_PER_SECOND;
-    const leftPx = clip.startTime * PIXELS_PER_SECOND;
+  const renderClip = (clip: TimelineClip, trackType: 'video' | 'audio', trackKey: TrackKey, pps: number) => {
+    const widthPx = clip.duration * pps;
+    const leftPx = clip.startTime * pps;
     const maxNameWidth = widthPx - 8; // Padding
 
     if (trackType === 'video') {
@@ -59,7 +94,7 @@ export const Timeline = () => {
         <div
           key={clip.id}
           draggable
-          onDragStart={(e) => handleClipDragStart(e, clip.id, 'v1', clip.startTime)}
+          onDragStart={(e) => handleClipDragStart(e, clip.id, trackKey, clip.startTime)}
           className="absolute top-1 bottom-1 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary flex flex-col items-start justify-between p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-move"
           style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
         >
@@ -85,7 +120,7 @@ export const Timeline = () => {
         <div
           key={clip.id}
           draggable
-          onDragStart={(e) => handleClipDragStart(e, clip.id, 'a1', clip.startTime)}
+          onDragStart={(e) => handleClipDragStart(e, clip.id, trackKey, clip.startTime)}
           className="absolute top-1 bottom-1 bg-clip-audio/30 hover:bg-clip-audio/40 rounded border border-clip-audio hover:border-primary flex flex-col px-2 py-1 shadow-md hover:shadow-panel-hover transition-all cursor-move"
           style={{ left: `${leftPx}px`, width: `${widthPx}px` }}
         >
@@ -351,7 +386,7 @@ export const Timeline = () => {
                 </div>
               </div>
             </div>
-            <div className="flex-1 relative h-12 px-1">
+            <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('v2')}>
               <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
                 {/* Grid lines (snapping guides) */}
                 {majorTicks.map((sec) => (
@@ -359,6 +394,8 @@ export const Timeline = () => {
                 ))}
                 {/* Playhead */}
                 <div className="absolute top-0 bottom-0 w-0.5 bg-timeline-yellow" style={{ left: playheadLeft }} />
+                {/* Clips V2 */}
+                {timelineClips.v2.map((clip) => renderClip(clip, 'video', 'v2', pixelsPerSecond))}
               </div>
               {/* left fade scrim to prevent visual bleed under sticky controls */}
               <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-timeline-bg/80 to-transparent z-40" />
@@ -395,17 +432,16 @@ export const Timeline = () => {
                 </div>
               </div>
             </div>
-            <div className="flex-1 relative h-12 px-1">
+            <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('v1')}>
               <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
-                {/* Example clips positioned by time (demo) */}
-                <div className="absolute top-1 bottom-1 left-48 w-40 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-pointer" />
-                <div className="absolute top-1 bottom-1 left-[22rem] w-32 bg-clip-video/80 hover:bg-clip-video rounded border border-clip-video hover:border-primary p-1 text-xs font-medium shadow-md hover:shadow-panel-hover transition-all cursor-pointer" />
                 {/* Grid lines */}
                 {majorTicks.map((sec) => (
                   <div key={sec} className="absolute top-0 bottom-0 w-px bg-timeline-yellow/10" style={{ left: sec * pixelsPerSecond }} />
                 ))}
                 {/* Playhead */}
                 <div className="absolute top-0 bottom-0 w-0.5 bg-timeline-yellow" style={{ left: playheadLeft }} />
+                {/* Clips V1 */}
+                {timelineClips.v1.map((clip) => renderClip(clip, 'video', 'v1', pixelsPerSecond))}
               </div>
               <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-timeline-bg/80 to-transparent z-40" />
             </div>
@@ -443,13 +479,15 @@ export const Timeline = () => {
                 </div>
               </div>
             </div>
-            <div className="flex-1 relative h-12 px-1">
+            <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('a1')}>
               <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
                 {/* Fake waveform grid + playhead */}
                 {majorTicks.map((sec) => (
                   <div key={sec} className="absolute top-0 bottom-0 w-px bg-timeline-yellow/10" style={{ left: sec * pixelsPerSecond }} />
                 ))}
                 <div className="absolute top-0 bottom-0 w-0.5 bg-timeline-yellow" style={{ left: playheadLeft }} />
+                {/* Clips A1 */}
+                {timelineClips.a1.map((clip) => renderClip(clip, 'audio', 'a1', pixelsPerSecond))}
               </div>
               <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-timeline-bg/80 to-transparent z-40" />
             </div>
@@ -484,12 +522,14 @@ export const Timeline = () => {
                 </div>
               </div>
             </div>
-            <div className="flex-1 relative h-12 px-1">
+            <div className="flex-1 relative h-12 px-1" onDragOver={(e)=>e.preventDefault()} onDrop={handleTrackDrop('a2')}>
               <div className="relative h-full" style={{ width: `${contentWidth}px`, transform: `translate3d(${-scrollX}px, 0, 0)`, willChange: 'transform' }}>
                 {majorTicks.map((sec) => (
                   <div key={sec} className="absolute top-0 bottom-0 w-px bg-timeline-yellow/10" style={{ left: sec * pixelsPerSecond }} />
                 ))}
                 <div className="absolute top-0 bottom-0 w-0.5 bg-timeline-yellow" style={{ left: playheadLeft }} />
+                {/* Clips A2 */}
+                {timelineClips.a2.map((clip) => renderClip(clip, 'audio', 'a2', pixelsPerSecond))}
               </div>
               <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-timeline-bg/80 to-transparent z-40" />
             </div>
