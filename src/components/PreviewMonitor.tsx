@@ -8,6 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { TimecodePair } from "@/components/Timecode";
+import { DEFAULT_FPS } from "@/lib/timecode";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type PreviewMonitorProps = {
   focusMode?: boolean;
@@ -15,9 +18,9 @@ type PreviewMonitorProps = {
 
 export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
   return (
-    <div className="h-full bg-panel-medium border-l-2 border-l-primary/20 border-t border-border flex flex-col overflow-hidden">
+    <div className="h-full bg-panel-medium border-l-2 border-l-primary/20 border-t border-border flex flex-col overflow-hidden min-w-0">
       {/* Header */}
-      <div className="h-12 border-b border-border flex items-center justify-between px-4">
+      <div className="h-12 border-b border-border flex items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-semibold text-foreground">Program Monitor</h2>
           <span className="rounded bg-panel-light px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -25,11 +28,16 @@ export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <select className="text-xs bg-input border border-border rounded px-2 py-1 text-foreground shrink-0 min-w-[7rem]">
-            <option>Full Quality</option>
-            <option>1/2 Quality</option>
-            <option>1/4 Quality</option>
-          </select>
+          <Select defaultValue="full">
+            <SelectTrigger className="h-8 min-w-[7rem] text-xs bg-input border-border">
+              <SelectValue placeholder="Quality" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="full">Full Quality</SelectItem>
+              <SelectItem value="half">1/2 Quality</SelectItem>
+              <SelectItem value="quarter">1/4 Quality</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -65,16 +73,16 @@ export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
       <div className="h-16 border-t border-border bg-monitor-controls px-6 flex items-center justify-between gap-6">
         {/* Left: Playback Controls */}
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+          <Button variant="ghost" size="icon" aria-label="Step back" className="h-8 w-8 hover:text-primary">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
               <path d="M0 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1z" />
             </svg>
           </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10 bg-gradient-primary hover:opacity-90 shadow-glow-primary">
+          <Button variant="ghost" size="icon" aria-label="Play" className="h-10 w-10 bg-gradient-primary hover:opacity-90 shadow-glow-primary">
             <Play className="w-5 h-5 text-white" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+          <Button variant="ghost" size="icon" aria-label="Step forward" className="h-8 w-8 hover:text-primary">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 1a1 1 0 0 1 1 1v12a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1z" />
               <path d="M9 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2h-6a1 1 0 0 1-1-1z" />
@@ -83,15 +91,14 @@ export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
         </div>
 
         {/* Center: Timecode Display */}
-        <div className="flex items-center gap-3">
-          <div className="text-base font-mono tabular-nums text-primary font-semibold tracking-wider">
-            00:00:00:00
-          </div>
-          <span className="text-muted-foreground">/</span>
-          <div className="text-base font-mono tabular-nums text-muted-foreground tracking-wider">
-            00:00:30:00
-          </div>
-        </div>
+        <TimecodePair
+          currentSeconds={0}
+          totalSeconds={30}
+          fps={DEFAULT_FPS}
+          className="[&_span:first-child]:text-primary [&_span:first-child]:font-semibold"
+          size="base"
+          fixedWidth
+        />
 
         {/* Right: Utility Controls */}
         <div className="flex items-center gap-3">
@@ -109,10 +116,10 @@ export const PreviewMonitor = ({ focusMode = false }: PreviewMonitorProps) => {
           <div className="w-px h-6 bg-border" />
 
           {/* Action Buttons */}
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+          <Button variant="ghost" size="icon" aria-label="Fullscreen" className="h-8 w-8 hover:text-primary">
             <Maximize className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+          <Button variant="ghost" size="icon" aria-label="Settings" className="h-8 w-8 hover:text-primary">
             <Settings className="w-4 h-4" />
           </Button>
         </div>

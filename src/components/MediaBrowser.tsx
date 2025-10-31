@@ -39,6 +39,8 @@ export const MediaBrowser = () => {
             size="icon" 
             className={`h-7 w-7 ${viewMode === "grid" ? "text-primary bg-primary/20" : ""}`}
             onClick={() => setViewMode("grid")}
+            aria-label="Grid view"
+            aria-pressed={viewMode === "grid"}
           >
             <Grid3x3 className="w-4 h-4" />
           </Button>
@@ -47,6 +49,8 @@ export const MediaBrowser = () => {
             size="icon" 
             className={`h-7 w-7 ${viewMode === "list" ? "text-primary bg-primary/20" : ""}`}
             onClick={() => setViewMode("list")}
+            aria-label="List view"
+            aria-pressed={viewMode === "list"}
           >
             <List className="w-4 h-4" />
           </Button>
@@ -105,7 +109,7 @@ export const MediaBrowser = () => {
                 </div>
                 <div className="p-2 bg-panel-light">
                   <p className="text-xs font-medium truncate">Media {item}.mp4</p>
-                  <p className="text-[10px] text-muted-foreground">1920x1080 • 5:24</p>
+                  <p className="text-[10px] text-muted-foreground font-mono tabular-nums">1920x1080 • 05:24</p>
                 </div>
               </div>
             ))}
@@ -129,7 +133,7 @@ export const MediaBrowser = () => {
                     </div>
                     <div className="p-2 bg-panel-light">
                       <p className="text-xs font-medium truncate">{file.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{file.resolution} • {file.duration}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono tabular-nums">{file.resolution} • {file.duration}</p>
                     </div>
                   </div>
                 ))}
@@ -155,7 +159,7 @@ export const MediaBrowser = () => {
                     <div className="p-2 bg-panel-light">
                       <Music2 className="w-4 h-4 text-muted-foreground mb-1" />
                       <p className="text-xs font-medium truncate">{file.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{file.duration}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono tabular-nums">{file.duration}</p>
                     </div>
                   </div>
                 ))}

@@ -59,6 +59,8 @@ export const EditingToolsBar = () => {
                       : "text-muted-foreground hover:text-foreground hover:bg-panel-medium"
                   } transition-all`}
                   onClick={() => setActiveTool(tool.id)}
+                  aria-label={tool.label}
+                  aria-pressed={activeTool === tool.id}
                 >
                   <Icon className="w-4 h-4" />
                 </Button>

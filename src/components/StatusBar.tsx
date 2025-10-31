@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TimecodePair } from "@/components/Timecode";
 import {
   Dialog,
   DialogContent,
@@ -70,7 +71,7 @@ export const StatusBar = ({ isFocusMode, onResetLayout }: StatusBarProps) => {
           </div>
           <div className="hidden md:flex items-center gap-2">
             <Clock className="h-3.5 w-3.5" />
-            <span>00:00:00 / 05:00:00</span>
+            <TimecodePair currentSeconds={0} totalSeconds={5 * 3600} fps={24} size="sm" fixedWidth />
           </div>
           <div className="hidden xl:flex items-center gap-2">
             <Cloud className="h-3.5 w-3.5 text-primary" />

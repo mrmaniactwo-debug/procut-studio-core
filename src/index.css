@@ -121,34 +121,41 @@ All colors MUST be HSL.
     background: transparent;
   }
 
+  /* Hide native horizontal scrollbar in the ruler; custom zoom bar controls it */
   .timeline-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: hsla(var(--timeline-yellow) / 0.6) hsla(var(--timeline-bg) / 1);
+    scrollbar-width: none; /* Firefox */
+    overscroll-behavior-x: none; /* avoid rubber-band */
   }
-
   .timeline-scrollbar::-webkit-scrollbar {
-    height: 12px;
+    height: 0px; /* Chrome/Safari/Edge */
+    width: 0px;
+    background: transparent;
   }
-
-  .timeline-scrollbar::-webkit-scrollbar-track {
-    background: hsla(var(--timeline-bg) / 1);
-    border-radius: 9999px;
-  }
-
-  .timeline-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, hsla(var(--timeline-yellow) / 0.9), hsla(var(--primary) / 0.9));
-    border-radius: 9999px;
-    border: 2px solid hsla(var(--timeline-bg) / 1);
-    box-shadow: 0 0 6px hsla(var(--timeline-yellow-glow) / 0.35);
-  }
-
-  .timeline-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, hsla(var(--primary) / 0.95), hsla(var(--timeline-yellow) / 0.95));
+  .timeline-scrollbar::-webkit-scrollbar-thumb,
+  .timeline-scrollbar::-webkit-scrollbar-track,
+  .timeline-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
   body {
     /* Replace Tailwind `@apply bg-background text-foreground` with explicit CSS */
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+
+  /* Hide vertical scrollbar in tracks list while keeping scroll functionality (custom vertical bar used) */
+  .tracks-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    overscroll-behavior: contain; /* keep scroll gestures local */
+  }
+  .tracks-scrollbar::-webkit-scrollbar {
+    width: 0px; /* Chrome/Safari/Edge */
+    height: 0px;
+    background: transparent;
+  }
+  .tracks-scrollbar::-webkit-scrollbar-thumb,
+  .tracks-scrollbar::-webkit-scrollbar-track,
+  .tracks-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }
